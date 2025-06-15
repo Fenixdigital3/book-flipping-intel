@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, User } from 'lucide-react';
+import { LogIn, User, TestTube } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 
 const Header = () => {
@@ -14,15 +14,15 @@ const Header = () => {
     <>
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
+          <div className="flex items-center space-x-4 group">
+            <div className="w-16 h-16 rounded-xl overflow-hidden group-hover:scale-105 transition-transform duration-300">
               <img 
-                src="/lovable-uploads/c34e6b00-78e5-4fe4-91c3-22322031c42f.png" 
+                src="/lovable-uploads/b6367f44-8b6d-4b68-a2ae-ad256b38d7b8.png" 
                 alt="BookFlipFinder Logo" 
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="text-2xl font-header text-white">BookFlipFinder</span>
+            <span className="text-3xl font-header text-white">BookFlipFinder</span>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -37,10 +37,21 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <Button onClick={() => setAuthModalOpen(true)} size="lg">
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Button>
+              <div className="flex items-center space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setAuthModalOpen(true)} 
+                  size="lg"
+                  className="border-neon-lime/30 text-neon-lime hover:bg-neon-lime/10"
+                >
+                  <TestTube className="w-4 h-4 mr-2" />
+                  Try Demo
+                </Button>
+                <Button onClick={() => setAuthModalOpen(true)} size="lg">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </div>
             )}
           </div>
         </div>

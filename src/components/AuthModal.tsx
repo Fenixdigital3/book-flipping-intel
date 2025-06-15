@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginCredentials, RegisterCredentials } from '@/types/auth';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, TestTube } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -47,12 +47,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleTestAccount = async () => {
+    const testCredentials = {
+      email: 'demo@bookflipfinder.com',
+      password: 'demo123456'
+    };
+    
+    const success = await login(testCredentials);
+    if (success) {
+      onClose();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Welcome to Book Arbitrage Intelligence</DialogTitle>
+          <DialogTitle>Welcome to BookFlipFinder</DialogTitle>
         </DialogHeader>
+
+        <div className="mb-4">
+          <Button 
+            onClick={handleTestAccount}
+            variant="outline"
+            className="w-full border-neon-lime/30 text-neon-lime hover:bg-neon-lime/10"
+            disabled={isLoading}
+          >
+            <TestTube className="w-4 h-4 mr-2" />
+            {isLoading ? 'Logging in...' : 'Try Demo Account'}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Use demo@bookflipfinder.com / demo123456 or create your own account
+          </p>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">

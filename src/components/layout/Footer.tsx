@@ -5,7 +5,7 @@ const Footer = () => {
       <div className="flex items-center justify-center space-x-3 mb-4">
         <div className="w-8 h-8 rounded-lg overflow-hidden">
           <img 
-            src="/lovable-uploads/c34e6b00-78e5-4fe4-91c3-22322031c42f.png" 
+            src="/lovable-uploads/b6367f44-8b6d-4b68-a2ae-ad256b38d7b8.png" 
             alt="BookFlipFinder Logo" 
             className="w-full h-full object-contain"
           />

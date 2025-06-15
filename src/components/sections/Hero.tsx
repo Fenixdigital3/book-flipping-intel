@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, TestTube } from 'lucide-react';
 
 interface HeroProps {
   onAuthModalOpen: () => void;
@@ -14,16 +14,6 @@ const Hero = ({ onAuthModalOpen }: HeroProps) => {
   return (
     <section className="container mx-auto px-4 py-16 text-center">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden animate-float">
-            <img 
-              src="/lovable-uploads/c34e6b00-78e5-4fe4-91c3-22322031c42f.png" 
-              alt="BookFlipFinder Logo" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-        
         <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
           Turn Books Into
           <span className="block mt-2 bg-gradient-to-r from-neon-orange to-neon-lime bg-clip-text text-transparent">
@@ -45,15 +35,23 @@ const Hero = ({ onAuthModalOpen }: HeroProps) => {
               </Link>
             </Button>
           ) : (
-            <Button size="lg" onClick={onAuthModalOpen} className="text-lg px-8 py-3">
-              Get Started Free
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            <>
+              <Button size="lg" onClick={onAuthModalOpen} className="text-lg px-8 py-3">
+                Get Started Free
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={onAuthModalOpen} 
+                className="text-lg px-8 py-3 border-neon-lime/30 text-neon-lime hover:bg-neon-lime/10"
+              >
+                <TestTube className="w-5 h-5 mr-2" />
+                Try Demo Account
+              </Button>
+            </>
           )}
-          
-          <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-            Watch Demo
-          </Button>
         </div>
       </div>
     </section>
