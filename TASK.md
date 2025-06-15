@@ -1,40 +1,43 @@
 
-# Book Arbitrage Platform - Development Tasks
+# TASK.md
 
-## Phase 1: Foundation (Current)
-- [x] Project architecture planning
-- [x] FastAPI backend scaffolding
-- [x] PostgreSQL models and database setup
-- [x] Basic scraper structure for Amazon US
-- [x] React frontend with book search interface
-- [x] API integration with TanStack Query
-- [ ] Deploy backend and database
-- [ ] Connect real scraping functionality
+## Active
 
-## Phase 2: Core Features
-- [ ] Advanced book search and filtering
-- [ ] Price history tracking and charts
-- [ ] Profit margin calculations
-- [ ] Alert system for good opportunities
-- [ ] Bulk data export functionality
+* [ ] Initialize backend project with FastAPI and SQLModel.
+* [ ] Initialize frontend project with React (Loveable.dev-compatible) and Tailwind CSS.
+* [ ] Define and migrate PostgreSQL schema: books, retailers, prices, profitability.
+* [ ] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics.
+* [ ] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours.
+* [ ] Build initial REST API endpoints for:
+  * [ ] Book list with filters
+  * [ ] Book detail with historical price trend
+* [ ] Design and implement search interface in frontend:
+  * [ ] Filter UI (profit margin, turnaround time)
+  * [ ] Search bar (ISBN, keyword)
+  * [ ] Result list with price comparison and trend button
 
-## Phase 3: Enhancement
-- [ ] Additional store scrapers (Barnes & Noble, etc.)
-- [ ] User authentication and saved searches
-- [ ] Advanced analytics and reporting
-- [ ] Mobile responsive optimization
-- [ ] API rate limiting and caching
+## Backlog
 
-## Current Status
-✅ Backend API structure created with FastAPI
-✅ Database models for books, prices, and stores
-✅ Amazon scraper placeholder with ethical considerations
-✅ React frontend with search interface and profit calculator
-✅ Modern UI with emerald green theme for profit indicators
+* [ ] Add scrapers for Barnes & Noble, ThriftBooks, BookOutlet.
+* [ ] Create scraper plugin interface and auto-discovery mechanism.
+* [ ] Implement profitability scoring algorithm:
+  * [ ] Margin calculation
+  * [ ] Stock change frequency → demand proxy
+* [ ] Implement export to CSV/Excel for search results.
+* [ ] Add user auth module (basic email/password or OAuth).
+* [ ] Deploy to Loveable.dev or Railway.
+* [ ] Add pagination and sorting to frontend search results.
+* [ ] Implement historical trend graph modal in frontend (e.g., Recharts).
+* [ ] Optimize DB queries and indexing.
 
-## Next Steps
-1. Set up PostgreSQL database connection
-2. Test scraper functionality with real Amazon data
-3. Deploy backend to hosting service
-4. Add more sophisticated search filters
-5. Implement price history tracking
+## Completed
+
+* [x] Project planning finalized (`PLANNING.md`)
+* [x] Directory structure and scaffolding strategy defined
+* [x] Golden rules and prompting workflow integrated
+
+## Discovered During Work
+
+* [ ] [Add scraper retry/timeout logging module]
+* [ ] [Evaluate need for rotating proxies on Amazon]
+* [ ] [Dynamic sitemap or robots.txt parser for future compliance]
