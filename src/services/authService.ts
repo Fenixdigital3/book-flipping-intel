@@ -7,6 +7,8 @@ class AuthService {
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    console.log(`Making request to: ${url}`);
+    
     const token = localStorage.getItem('auth_token');
     
     // Fix headers type issue by using proper object construction
@@ -30,14 +32,23 @@ class AuthService {
         headers,
       });
 
+      console.log(`Response status: ${response.status}`);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error(`API Error:`, errorData);
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
+      
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to server. Please check if the backend is running.');
+      }
+      
       throw error;
     }
   }
@@ -70,6 +81,7 @@ class AuthService {
   }
 
   async register(credentials: RegisterCredentials): Promise<User> {
+    console.log('Attempting to register with:', { email: credentials.email });
     return this.makeRequest<User>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(credentials),

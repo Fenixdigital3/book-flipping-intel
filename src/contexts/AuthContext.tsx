@@ -91,8 +91,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       
+      console.log('Starting registration process...');
       await authService.register(credentials);
       
+      console.log('Registration successful, now logging in...');
       // After successful registration, log the user in
       const { token, user } = await authService.login(credentials);
       
@@ -111,10 +113,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return true;
     } catch (error: any) {
+      console.error('Registration failed:', error);
       setState(prev => ({ ...prev, isLoading: false }));
+      
+      let errorMessage = "Failed to create account";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Registration failed",
-        description: error.message || "Failed to create account",
+        description: errorMessage,
         variant: "destructive",
       });
       return false;

@@ -16,6 +16,7 @@ from ..auth.security import (
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from ..auth.dependencies import get_current_user
 
 router = APIRouter()
 
