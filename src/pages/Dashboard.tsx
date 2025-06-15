@@ -11,6 +11,7 @@ import OpportunityCard from '@/components/OpportunityCard';
 import StatsCard from '@/components/StatsCard';
 import PaginationControls from '@/components/PaginationControls';
 import SortingControls from '@/components/SortingControls';
+import ExportButton from '@/components/ExportButton';
 import { apiService, PaginatedSearchParams } from '@/services/api';
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 import { 
@@ -212,14 +213,25 @@ const Dashboard: React.FC = () => {
                     )}
                   </CardTitle>
                   
-                  {/* Sorting Controls */}
-                  {books.length > 0 && (
-                    <SortingControls
-                      sortBy={sortBy}
-                      sortDirection={sortDirection}
-                      onSortChange={handleSortChange}
-                    />
-                  )}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Export Button */}
+                    {books.length > 0 && (
+                      <ExportButton 
+                        books={books} 
+                        isLoading={booksLoading}
+                        className="w-full sm:w-auto"
+                      />
+                    )}
+                    
+                    {/* Sorting Controls */}
+                    {books.length > 0 && (
+                      <SortingControls
+                        sortBy={sortBy}
+                        sortDirection={sortDirection}
+                        onSortChange={handleSortChange}
+                      />
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
