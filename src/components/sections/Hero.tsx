@@ -14,7 +14,17 @@ const Hero = ({ onAuthModalOpen }: HeroProps) => {
   return (
     <section className="container mx-auto px-4 py-16 text-center">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-glass-float">
+        <div className="flex justify-center mb-8">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden animate-float">
+            <img 
+              src="/lovable-uploads/c34e6b00-78e5-4fe4-91c3-22322031c42f.png" 
+              alt="BookFlipFinder Logo" 
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+        
+        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
           Turn Books Into
           <span className="block mt-2 bg-gradient-to-r from-neon-orange to-neon-lime bg-clip-text text-transparent">
             Profitable Investments

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, LogIn, User } from 'lucide-react';
+import { LogIn, User } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 
 const Header = () => {
@@ -14,11 +14,15 @@ const Header = () => {
     <>
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 group">
-            <div className="p-2 rounded-lg bg-neon-orange/20 group-hover:bg-neon-orange/30 transition-all duration-300">
-              <BookOpen className="w-8 h-8 text-neon-orange" />
+          <div className="flex items-center space-x-3 group">
+            <div className="w-12 h-12 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
+              <img 
+                src="/lovable-uploads/c34e6b00-78e5-4fe4-91c3-22322031c42f.png" 
+                alt="BookFlipFinder Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-2xl font-header text-white">BookArb</span>
+            <span className="text-2xl font-header text-white">BookFlipFinder</span>
           </div>
           
           <div className="flex items-center space-x-4">
