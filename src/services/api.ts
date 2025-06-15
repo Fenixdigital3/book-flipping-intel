@@ -62,10 +62,15 @@ class ApiService {
     // Get auth token from localStorage
     const token = localStorage.getItem('auth_token');
     
+    // Fix headers type issue by using proper object construction
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options?.headers,
     };
+
+    // Add existing headers from options if they exist
+    if (options?.headers) {
+      Object.assign(headers, options.headers);
+    }
 
     // Add authorization header if token exists
     if (token) {
@@ -74,8 +79,8 @@ class ApiService {
 
     try {
       const response = await fetch(url, {
-        headers,
         ...options,
+        headers,
       });
 
       if (!response.ok) {

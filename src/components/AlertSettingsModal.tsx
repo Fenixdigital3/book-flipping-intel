@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -78,11 +77,11 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
     },
   });
 
-  // Fetch existing preferences
+  // Fetch existing preferences - fixed to not pass userId
   const { data: preferences, isLoading } = useQuery({
-    queryKey: ['alertPreferences', userId],
-    queryFn: () => apiService.getAlertPreferences(userId),
-    enabled: isOpen && !!userId,
+    queryKey: ['alertPreferences'],
+    queryFn: () => apiService.getAlertPreferences(),
+    enabled: isOpen,
     retry: false,
   });
 
@@ -90,16 +89,16 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
   const createMutation = useMutation({
     mutationFn: (data: AlertPreferenceCreate) => apiService.createAlertPreferences(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alertPreferences', userId] });
+      queryClient.invalidateQueries({ queryKey: ['alertPreferences'] });
       onClose();
     },
   });
 
-  // Update preferences mutation
+  // Update preferences mutation - fixed to not pass userId
   const updateMutation = useMutation({
-    mutationFn: (data: AlertPreferenceUpdate) => apiService.updateAlertPreferences(userId, data),
+    mutationFn: (data: AlertPreferenceUpdate) => apiService.updateAlertPreferences(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alertPreferences', userId] });
+      queryClient.invalidateQueries({ queryKey: ['alertPreferences'] });
       onClose();
     },
   });
