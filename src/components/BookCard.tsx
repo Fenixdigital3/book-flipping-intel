@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Book } from '@/types/api';
-import { ExternalLink, TrendingUp, DollarSign } from 'lucide-react';
+import { ExternalLink, TrendingUp, DollarSign, Package } from 'lucide-react';
+import TrendModal from './TrendModal';
 
 interface BookCardProps {
   book: Book;
@@ -12,121 +13,134 @@ interface BookCardProps {
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
+  const [showTrendModal, setShowTrendModal] = useState(false);
+
   const formatPrice = (price: number) => `$${price.toFixed(2)}`;
   
-  const getProfitColor = (spread?: number) => {
-    if (!spread) return 'text-gray-500';
-    if (spread >= 10) return 'text-emerald-600';
-    if (spread >= 5) return 'text-yellow-600';
-    return 'text-gray-500';
-  };
+  const profitMargin = book.price_spread && book.lowest_price 
+    ? ((book.price_spread / book.lowest_price) * 100).toFixed(1)
+    : null;
 
-  const getProfitIcon = (spread?: number) => {
-    if (!spread || spread < 5) return null;
-    return <TrendingUp className="w-4 h-4 ml-1" />;
+  const handleViewTrends = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowTrendModal(true);
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="pb-3">
-        <div className="flex items-start space-x-3">
-          {book.image_url && (
-            <img
-              src={book.image_url}
-              alt={book.title}
-              className="w-16 h-20 object-cover rounded border flex-shrink-0"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = 'https://via.placeholder.com/64x80?text=Book';
-              }}
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg leading-tight line-clamp-2">
-              {book.title}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              by {book.author}
-            </p>
-            {book.category && (
-              <Badge variant="secondary" className="mt-2 text-xs">
-                {book.category}
-              </Badge>
+    <>
+      <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 pr-3">
+              <CardTitle className="text-lg font-semibold line-clamp-2 mb-1">
+                {book.title}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mb-1">{book.author}</p>
+              <p className="text-xs text-muted-foreground">ISBN: {book.isbn}</p>
+            </div>
+            {book.image_url && (
+              <img
+                src={book.image_url}
+                alt={book.title}
+                className="w-16 h-20 object-cover rounded border"
+              />
             )}
           </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="space-y-3">
+        </CardHeader>
+
+        <CardContent>
           {/* Price Information */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {book.lowest_price && (
-              <div>
-                <span className="text-muted-foreground">Lowest: </span>
-                <span className="font-medium text-green-600">
-                  {formatPrice(book.lowest_price)}
-                </span>
+          <div className="space-y-3 mb-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Price Range:</span>
+              <div className="text-right">
+                {book.lowest_price && book.highest_price ? (
+                  <div className="space-y-1">
+                    <div className="text-lg font-bold text-green-600">
+                      {formatPrice(book.lowest_price)} - {formatPrice(book.highest_price)}
+                    </div>
+                    {profitMargin && (
+                      <Badge variant="secondary" className="text-xs">
+                        {profitMargin}% spread
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">No prices available</span>
+                )}
               </div>
-            )}
-            {book.highest_price && (
-              <div>
-                <span className="text-muted-foreground">Highest: </span>
-                <span className="font-medium">
-                  {formatPrice(book.highest_price)}
-                </span>
+            </div>
+
+            {/* Store Count */}
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-1">
+                <Package className="w-4 h-4 text-muted-foreground" />
+                <span>Available at {book.current_prices?.length || 0} stores</span>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Profit Potential */}
-          {book.price_spread && book.price_spread > 0 && (
-            <div className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg border border-emerald-200">
-              <span className="text-sm font-medium text-emerald-800">
-                Profit Potential
-              </span>
-              <div className={`flex items-center font-bold ${getProfitColor(book.price_spread)}`}>
-                <DollarSign className="w-4 h-4" />
-                {formatPrice(book.price_spread)}
-                {getProfitIcon(book.price_spread)}
+          {/* Current Prices Preview */}
+          {book.current_prices && book.current_prices.length > 0 && (
+            <div className="space-y-2 mb-4">
+              <h4 className="text-sm font-medium">Current Prices:</h4>
+              <div className="space-y-1">
+                {book.current_prices.slice(0, 3).map((price, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{price.store_name}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{formatPrice(price.price)}</span>
+                      {price.url && (
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {book.current_prices.length > 3 && (
+                  <p className="text-xs text-muted-foreground">
+                    +{book.current_prices.length - 3} more stores
+                  </p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Store Count */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{book.current_prices?.length || 0} stores tracked</span>
-            <span>ISBN: {book.isbn}</span>
-          </div>
-
           {/* Action Buttons */}
-          <div className="flex space-x-2 pt-2">
+          <div className="flex space-x-2">
             <Button 
+              onClick={handleViewTrends}
               variant="outline" 
               size="sm" 
               className="flex-1"
-              onClick={() => onViewDetails?.(book)}
             >
-              View Details
+              <TrendingUp className="w-4 h-4 mr-2" />
+              View Trends
             </Button>
-            {book.current_prices?.length > 0 && (
+            {onViewDetails && (
               <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  const bestPrice = book.current_prices.find(p => p.price === book.lowest_price);
-                  if (bestPrice?.url) {
-                    window.open(bestPrice.url, '_blank');
-                  }
-                }}
+                onClick={() => onViewDetails(book)}
+                variant="default" 
+                size="sm" 
+                className="flex-1"
               >
-                <ExternalLink className="w-4 h-4" />
+                <DollarSign className="w-4 h-4 mr-2" />
+                Details
               </Button>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Trend Modal */}
+      <TrendModal
+        bookId={book.id}
+        bookTitle={book.title}
+        isOpen={showTrendModal}
+        onClose={() => setShowTrendModal(false)}
+      />
+    </>
   );
 };
 
