@@ -1,73 +1,40 @@
-# Welcome to your Lovable project
 
-## Project info
+# BookFlipFinder
 
-**URL**: https://lovable.dev/projects/40c5b494-42fb-4583-911d-99b12d9c1db6
+**BookFlipFinder** is a web-based tool that helps individual book resellers find profitable books to flip by scraping real-time and historical pricing data from major online bookstores like Amazon, Barnes & Noble, and others. It provides actionable insights based on profit margins and desired resale speeds, enabling smarter, faster sourcing decisions.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Features
 
-**Use Lovable**
+- 🔍 Scrapes and stores prices, availability, and stock levels from major online book retailers.
+- 📊 Tracks book pricing historically and in real-time.
+- 💰 Calculates book resale profitability based on margin and demand trends.
+- 🔎 Allows users to search and filter books by profit margin, resale velocity, and retailer.
+- 📤 Exportable results (CSV support planned).
+- 📈 Price trend graphs (upcoming).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/40c5b494-42fb-4583-911d-99b12d9c1db6) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🧰 Tech Stack
 
-**Use your preferred IDE**
+| Layer       | Technology            |
+|-------------|------------------------|
+| Frontend    | React, Tailwind CSS    |
+| Backend     | Python, FastAPI        |
+| Database    | PostgreSQL + SQLModel  |
+| Scraping    | Playwright (headless)  |
+| Scheduler   | APScheduler / Celery   |
+| Testing     | Pytest                 |
+| Deployment  | Docker, Loveable.dev   |
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## ⚙️ Getting Started
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Backend
+```bash
+cd backend
+cp .env.example .env
+docker-compose up --build
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/40c5b494-42fb-4583-911d-99b12d9c1db6) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
