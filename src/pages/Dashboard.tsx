@@ -83,10 +83,10 @@ const Dashboard: React.FC = () => {
   // Show loading while checking authentication
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-deep-charcoal flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Loading...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-neon-orange" />
+          <p className="text-white font-body">Loading...</p>
         </div>
       </div>
     );
@@ -96,9 +96,9 @@ const Dashboard: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Please log in to continue</h1>
+        <div className="min-h-screen bg-deep-charcoal flex items-center justify-center">
+          <div className="text-center glass-panel p-8 rounded-lg">
+            <h1 className="text-2xl font-header mb-4 text-white">Please log in to continue</h1>
             <Button onClick={() => setAuthModalOpen(true)}>Login / Register</Button>
           </div>
         </div>
@@ -161,30 +161,33 @@ const Dashboard: React.FC = () => {
   const highProfitOpportunities = opportunities.filter(opp => opp.profit >= 10).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-deep-charcoal relative">
+      {/* Ambient background effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-deep-charcoal via-glass-purple/5 to-deep-charcoal" />
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-4xl font-header text-white mb-2 animate-glass-float">
                 Book Arbitrage Intelligence
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-white/70 font-body">
                 Find profitable book resale opportunities across online stores
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span>{user?.email}</span>
+              <div className="flex items-center space-x-2 text-sm text-white/80 glass-panel px-3 py-2 rounded-lg">
+                <User className="w-4 h-4 text-neon-lime" />
+                <span className="font-body">{user?.email}</span>
               </div>
               <div className="flex space-x-2">
                 <Button variant="outline" onClick={handleTestScraper}>
-                  <Database className="w-4 h-4 mr-2" />
+                  <Database className="w-4 h-4 mr-2 text-neon-orange" />
                   Test Scraper
                 </Button>
-                <Button onClick={() => {
+                <Button variant="secondary" onClick={() => {
                   refetchBooks();
                   refetchOpportunities();
                 }}>
@@ -206,28 +209,28 @@ const Dashboard: React.FC = () => {
               value={totalBooks.toLocaleString()}
               subtitle="In current results"
               icon={BookOpen}
-              className="border-l-4 border-l-blue-500"
+              className="border-l-4 border-l-neon-orange"
             />
             <StatsCard
               title="Active Opportunities"
               value={opportunities.length}
               subtitle="Profitable deals"
               icon={TrendingUp}
-              className="border-l-4 border-l-emerald-500"
+              className="border-l-4 border-l-neon-lime"
             />
             <StatsCard
               title="Avg Profit"
               value={`$${avgProfit.toFixed(2)}`}
               subtitle="Per opportunity"
               icon={DollarSign}
-              className="border-l-4 border-l-yellow-500"
+              className="border-l-4 border-l-neon-orange"
             />
             <StatsCard
               title="High Value"
               value={highProfitOpportunities}
               subtitle="$10+ profit deals"
               icon={AlertCircle}
-              className="border-l-4 border-l-purple-500"
+              className="border-l-4 border-l-glass-purple"
             />
           </div>
         </div>
@@ -239,14 +242,14 @@ const Dashboard: React.FC = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="search" className="flex items-center space-x-2">
+          <TabsList className="grid w-full grid-cols-2 mb-6 glass-panel">
+            <TabsTrigger value="search" className="flex items-center space-x-2 data-[state=active]:bg-neon-orange data-[state=active]:text-white">
               <Search className="w-4 h-4" />
-              <span>Book Search</span>
+              <span className="font-medium">Book Search</span>
             </TabsTrigger>
-            <TabsTrigger value="opportunities" className="flex items-center space-x-2">
+            <TabsTrigger value="opportunities" className="flex items-center space-x-2 data-[state=active]:bg-neon-lime data-[state=active]:text-deep-charcoal">
               <TrendingUp className="w-4 h-4" />
-              <span>Opportunities</span>
+              <span className="font-medium">Opportunities</span>
             </TabsTrigger>
           </TabsList>
 
@@ -255,10 +258,10 @@ const Dashboard: React.FC = () => {
               <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <CardTitle className="flex items-center space-x-2">
-                    <Search className="w-5 h-5" />
+                    <Search className="w-5 h-5 text-neon-orange" />
                     <span>Search Results</span>
                     {totalBooks > 0 && (
-                      <span className="text-sm text-muted-foreground ml-2">
+                      <span className="text-sm text-white/60 ml-2 font-body">
                         ({totalBooks} books shown)
                       </span>
                     )}
@@ -288,34 +291,34 @@ const Dashboard: React.FC = () => {
               <CardContent>
                 {booksLoading && (
                   <div className="flex justify-center items-center h-32">
-                    <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                    <span>Searching books...</span>
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2 text-neon-orange" />
+                    <span className="text-white font-body">Searching books...</span>
                   </div>
                 )}
 
                 {booksError && (
                   <div className="text-center h-32 flex items-center justify-center">
-                    <div className="text-red-500">
+                    <div className="text-red-400">
                       <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-                      <p>Error loading books. Please check your connection.</p>
+                      <p className="font-body">Error loading books. Please check your connection.</p>
                     </div>
                   </div>
                 )}
 
                 {!booksLoading && !booksError && books.length === 0 && Object.keys(searchFilters).length > 0 && (
-                  <div className="text-center h-32 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center h-32 flex items-center justify-center text-white/60">
                     <div>
                       <BookOpen className="w-8 h-8 mx-auto mb-2" />
-                      <p>No books found. Try adjusting your search criteria.</p>
+                      <p className="font-body">No books found. Try adjusting your search criteria.</p>
                     </div>
                   </div>
                 )}
 
                 {!booksLoading && !booksError && books.length === 0 && Object.keys(searchFilters).length === 0 && (
-                  <div className="text-center h-32 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center h-32 flex items-center justify-center text-white/60">
                     <div>
                       <Search className="w-8 h-8 mx-auto mb-2" />
-                      <p>Enter search criteria to find books and compare prices.</p>
+                      <p className="font-body">Enter search criteria to find books and compare prices.</p>
                     </div>
                   </div>
                 )}
@@ -355,10 +358,10 @@ const Dashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5" />
+                  <TrendingUp className="w-5 h-5 text-neon-lime" />
                   <span>Arbitrage Opportunities</span>
                   {opportunities.length > 0 && (
-                    <span className="text-sm text-muted-foreground ml-2">
+                    <span className="text-sm text-white/60 ml-2 font-body">
                       ({opportunities.length} opportunities)
                     </span>
                   )}
@@ -367,17 +370,17 @@ const Dashboard: React.FC = () => {
               <CardContent>
                 {opportunitiesLoading && (
                   <div className="flex justify-center items-center h-32">
-                    <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                    <span>Loading opportunities...</span>
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2 text-neon-orange" />
+                    <span className="text-white font-body">Loading opportunities...</span>
                   </div>
                 )}
 
                 {opportunities.length === 0 && !opportunitiesLoading && (
-                  <div className="text-center h-32 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center h-32 flex items-center justify-center text-white/60">
                     <div>
                       <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-                      <p>No profitable opportunities found at the moment.</p>
-                      <p className="text-sm mt-1">Try running the scraper to collect fresh data.</p>
+                      <p className="font-body">No profitable opportunities found at the moment.</p>
+                      <p className="text-sm mt-1 font-body">Try running the scraper to collect fresh data.</p>
                     </div>
                   </div>
                 )}

@@ -1,94 +1,65 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* BeatFlow-inspired neon-glass design system */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core BeatFlow Color Palette */
+    --primary-accent: #F54A38;
+    --secondary-accent: #C3F03F;
+    --background-base: #161316;
+    --glass-base: rgba(67, 37, 110, 0.15);
+    --glass-border: rgba(245, 74, 56, 0.3);
+    --depth-shadow: #43256E;
+    --foreground-text: #FFFFFF;
+    
+    /* Glassmorphism Variables */
+    --glass-blur: 16px;
+    --glass-opacity: 0.1;
+    --glow-intensity: 0 0 20px;
+    
+    /* Updated Design System Variables */
+    --background: 22 19 22;
+    --foreground: 255 255 255;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: rgba(67, 37, 110, 0.15);
+    --card-foreground: 255 255 255;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: rgba(67, 37, 110, 0.2);
+    --popover-foreground: 255 255 255;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 245 74 56;
+    --primary-foreground: 255 255 255;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 195 240 63;
+    --secondary-foreground: 22 19 22;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: rgba(67, 37, 110, 0.3);
+    --muted-foreground: 200 200 200;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 195 240 63;
+    --accent-foreground: 22 19 22;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: rgba(245, 74, 56, 0.3);
+    --input: rgba(67, 37, 110, 0.2);
+    --ring: 245 74 56;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: rgba(67, 37, 110, 0.1);
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 245 74 56;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: rgba(195, 240, 63, 0.1);
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: rgba(245, 74, 56, 0.2);
+    --sidebar-ring: 195 240 63;
   }
 }
 
@@ -98,6 +69,75 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#161316] text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #161316 0%, #1a1625 50%, #161316 100%);
+    min-height: 100vh;
   }
+
+  /* Glass morphism base effects */
+  .glass-panel {
+    background: rgba(67, 37, 110, 0.15);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(245, 74, 56, 0.3);
+    box-shadow: 
+      0 8px 32px rgba(67, 37, 110, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-panel:hover {
+    border-color: rgba(245, 74, 56, 0.6);
+    box-shadow: 
+      0 12px 40px rgba(67, 37, 110, 0.4),
+      0 0 20px rgba(245, 74, 56, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Neon glow effects */
+  .neon-glow-orange {
+    box-shadow: 0 0 20px rgba(245, 74, 56, 0.4);
+  }
+
+  .neon-glow-lime {
+    box-shadow: 0 0 20px rgba(195, 240, 63, 0.4);
+  }
+
+  /* Gradient buttons */
+  .gradient-button {
+    background: linear-gradient(135deg, #F54A38, #C3F03F);
+    border-radius: 30px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .gradient-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(245, 74, 56, 0.6);
+  }
+
+  /* Typography weights */
+  .font-body { font-weight: 400; }
+  .font-medium { font-weight: 500; }
+  .font-header { font-weight: 600; }
+  .font-bold { font-weight: 700; }
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 74, 56, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(245, 74, 56, 0.6); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
