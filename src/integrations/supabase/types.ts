@@ -9,7 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      alert_preferences: {
+        Row: {
+          alert_frequency: string
+          created_at: string
+          id: string
+          include_retailers: string[]
+          is_active: boolean
+          min_stock: number
+          profit_margin_threshold: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_frequency?: string
+          created_at?: string
+          id?: string
+          include_retailers?: string[]
+          is_active?: boolean
+          min_stock?: number
+          profit_margin_threshold?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_frequency?: string
+          created_at?: string
+          id?: string
+          include_retailers?: string[]
+          is_active?: boolean
+          min_stock?: number
+          profit_margin_threshold?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

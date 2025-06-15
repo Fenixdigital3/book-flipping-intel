@@ -1,6 +1,7 @@
 // API service for making requests to the FastAPI backend.
 
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
+import { AlertPreference, AlertPreferenceCreate, AlertPreferenceUpdate } from '@/types/alerts';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -132,6 +133,31 @@ class ApiService {
 
     const endpoint = `/api/prices/statistics/${bookId}?${params.toString()}`;
     return this.makeRequest<PriceStatistics>(endpoint);
+  }
+
+  // Alert Preferences endpoints
+  async getAlertPreferences(userId: string): Promise<AlertPreference> {
+    return this.makeRequest<AlertPreference>(`/api/alerts/preferences/${userId}`);
+  }
+
+  async createAlertPreferences(data: AlertPreferenceCreate): Promise<AlertPreference> {
+    return this.makeRequest<AlertPreference>('/api/alerts/preferences', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAlertPreferences(userId: string, data: AlertPreferenceUpdate): Promise<AlertPreference> {
+    return this.makeRequest<AlertPreference>(`/api/alerts/preferences/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAlertPreferences(userId: string): Promise<{ message: string }> {
+    return this.makeRequest<{ message: string }>(`/api/alerts/preferences/${userId}`, {
+      method: 'DELETE',
+    });
   }
 
   // Scraper endpoints

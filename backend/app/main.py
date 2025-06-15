@@ -12,7 +12,7 @@ import os
 from dotenv import load_dotenv
 import atexit
 
-from .routes import books, prices, scraper, price_history
+from .routes import books, prices, scraper, price_history, alerts
 from .database import engine, Base
 from .scheduler import scheduler_service
 
@@ -55,6 +55,7 @@ app.include_router(books.router, prefix="/api/books", tags=["books"])
 app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
 app.include_router(price_history.router, prefix="/api/prices", tags=["price-history"])
 app.include_router(scraper.router, prefix="/api/scraper", tags=["scraper"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 
 @app.get("/")
 async def root():
@@ -74,4 +75,3 @@ async def health_check():
 async def get_scheduler_status():
     """Get scheduler status and job information."""
     return scheduler_service.get_status()
-
