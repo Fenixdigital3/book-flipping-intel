@@ -3,7 +3,6 @@
 
 ## Active
 
-* [ ] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours.
 * [ ] Build initial REST API endpoints for:
   * [ ] Book list with filters
   * [ ] Book detail with historical price trend
@@ -28,6 +27,7 @@
 
 ## Completed
 
+* [x] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours. _(Completed 2025-06-15)_
 * [x] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics. _(Completed 2025-06-15)_
 * [x] Define and migrate PostgreSQL schema: books, retailers, prices, profitability. _(Completed 2025-06-15)_
 * [x] Initialize backend project with FastAPI and SQLModel. _(Completed 2025-06-15)_

@@ -10,9 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
 from dotenv import load_dotenv
+import atexit
 
 from .routes import books, prices, scraper
 from .database import engine, Base
+from .scheduler import scheduler_service
 
 # Load environment variables
 load_dotenv()
@@ -35,6 +37,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Start background scheduler on application startup."""
+    scheduler_service.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop background scheduler on application shutdown."""
+    scheduler_service.stop()
+
+# Register cleanup on exit
+atexit.register(lambda: scheduler_service.stop())
+
 # Include route handlers
 app.include_router(books.router, prefix="/api/books", tags=["books"])
 app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
@@ -53,3 +68,8 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "book-arbitrage-api"}
+
+@app.get("/scheduler/status")
+async def get_scheduler_status():
+    """Get scheduler status and job information."""
+    return scheduler_service.get_status()
