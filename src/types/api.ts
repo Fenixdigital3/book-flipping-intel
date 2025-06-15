@@ -63,3 +63,10 @@ export interface SearchFilters {
   min_price?: number;
   max_price?: number;
 }
+
+export interface PaginatedSearchFilters extends SearchFilters {
+  limit?: number;
+  offset?: number;
+  order_by?: string;
+  order_direction?: 'asc' | 'desc';
+}

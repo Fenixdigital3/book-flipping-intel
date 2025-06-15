@@ -9,7 +9,9 @@ import SearchBar from '@/components/SearchBar';
 import BookCard from '@/components/BookCard';
 import OpportunityCard from '@/components/OpportunityCard';
 import StatsCard from '@/components/StatsCard';
-import { apiService } from '@/services/api';
+import PaginationControls from '@/components/PaginationControls';
+import SortingControls from '@/components/SortingControls';
+import { apiService, PaginatedSearchParams } from '@/services/api';
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 import { 
   Search, 
@@ -24,6 +26,22 @@ import {
 const Dashboard: React.FC = () => {
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [activeTab, setActiveTab] = useState('search');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortBy, setSortBy] = useState('title');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Calculate offset for API calls
+  const offset = (currentPage - 1) * pageSize;
+
+  // Build search parameters
+  const searchParams: PaginatedSearchParams = {
+    ...searchFilters,
+    limit: pageSize,
+    offset,
+    order_by: sortBy,
+    order_direction: sortDirection,
+  };
 
   // Queries
   const {
@@ -32,8 +50,8 @@ const Dashboard: React.FC = () => {
     refetch: refetchBooks,
     error: booksError
   } = useQuery({
-    queryKey: ['books', searchFilters],
-    queryFn: () => apiService.searchBooks(searchFilters),
+    queryKey: ['books', searchParams],
+    queryFn: () => apiService.searchBooksWithPagination(searchParams),
     enabled: Object.keys(searchFilters).length > 0
   });
 
@@ -49,9 +67,25 @@ const Dashboard: React.FC = () => {
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
+    setCurrentPage(1); // Reset to first page on new search
     if (Object.keys(filters).length > 0) {
       setActiveTab('search');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+    setSortBy(field);
+    setSortDirection(direction);
+    setCurrentPage(1); // Reset to first page when changing sort
   };
 
   const handleTestScraper = async () => {
@@ -79,7 +113,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Calculate stats
+  // Calculate stats - simplified for now since we don't have total count
   const totalBooks = books.length;
   const avgProfit = opportunities.reduce((sum, opp) => sum + opp.profit, 0) / (opportunities.length || 1);
   const highProfitOpportunities = opportunities.filter(opp => opp.profit >= 10).length;
@@ -118,7 +152,7 @@ const Dashboard: React.FC = () => {
             <StatsCard
               title="Books Tracked"
               value={totalBooks.toLocaleString()}
-              subtitle="In database"
+              subtitle="In current results"
               icon={BookOpen}
               className="border-l-4 border-l-blue-500"
             />
@@ -167,15 +201,26 @@ const Dashboard: React.FC = () => {
           <TabsContent value="search">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Search className="w-5 h-5" />
-                  <span>Search Results</span>
-                  {totalBooks > 0 && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      ({totalBooks} books found)
-                    </span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Search className="w-5 h-5" />
+                    <span>Search Results</span>
+                    {totalBooks > 0 && (
+                      <span className="text-sm text-muted-foreground ml-2">
+                        ({totalBooks} books shown)
+                      </span>
+                    )}
+                  </CardTitle>
+                  
+                  {/* Sorting Controls */}
+                  {books.length > 0 && (
+                    <SortingControls
+                      sortBy={sortBy}
+                      sortDirection={sortDirection}
+                      onSortChange={handleSortChange}
+                    />
                   )}
-                </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 {booksLoading && (
@@ -213,20 +258,31 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {books.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {books.map((book) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        onViewDetails={(book) => {
-                          toast({
-                            title: "Book Details",
-                            description: `Viewing details for "${book.title}"`,
-                          });
-                        }}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                      {books.map((book) => (
+                        <BookCard
+                          key={book.id}
+                          book={book}
+                          onViewDetails={(book) => {
+                            toast({
+                              title: "Book Details",
+                              description: `Viewing details for "${book.title}"`,
+                            });
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalItems={1000} // TODO: We need to get total count from API
+                      pageSize={pageSize}
+                      onPageChange={handlePageChange}
+                      onPageSizeChange={handlePageSizeChange}
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>

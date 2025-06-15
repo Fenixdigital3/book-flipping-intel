@@ -41,6 +41,20 @@ export interface PriceStatistics {
   };
 }
 
+export interface PaginatedSearchParams extends SearchFilters {
+  limit?: number;
+  offset?: number;
+  order_by?: string;
+  order_direction?: 'asc' | 'desc';
+}
+
+export interface PaginatedBookResponse {
+  books: Book[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 class ApiService {
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -77,6 +91,24 @@ class ApiService {
     if (filters.max_price) params.append('max_price', filters.max_price.toString());
 
     const endpoint = `/api/books/search?${params.toString()}`;
+    return this.makeRequest<Book[]>(endpoint);
+  }
+
+  async searchBooksWithPagination(params: PaginatedSearchParams): Promise<Book[]> {
+    const searchParams = new URLSearchParams();
+    
+    if (params.query) searchParams.append('q', params.query);
+    if (params.isbn) searchParams.append('isbn', params.isbn);
+    if (params.author) searchParams.append('author', params.author);
+    if (params.category) searchParams.append('category', params.category);
+    if (params.min_price) searchParams.append('min_price', params.min_price.toString());
+    if (params.max_price) searchParams.append('max_price', params.max_price.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.offset) searchParams.append('offset', params.offset.toString());
+    if (params.order_by) searchParams.append('order_by', params.order_by);
+    if (params.order_direction) searchParams.append('order_direction', params.order_direction);
+
+    const endpoint = `/api/books/search?${searchParams.toString()}`;
     return this.makeRequest<Book[]>(endpoint);
   }
 

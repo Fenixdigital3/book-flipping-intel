@@ -1,4 +1,3 @@
-
 """
 Book-related API routes.
 
@@ -25,10 +24,12 @@ async def search_books(
     max_price: Optional[float] = Query(None, description="Maximum price filter"),
     limit: int = Query(50, le=100, description="Number of results to return"),
     offset: int = Query(0, description="Number of results to skip"),
+    order_by: Optional[str] = Query(None, description="Sort by field (title, author, lowest_price, highest_price, price_spread)"),
+    order_direction: Optional[str] = Query("asc", description="Sort direction (asc, desc)"),
     db: Session = Depends(get_db)
 ):
     """
-    Search books with various filters.
+    Search books with various filters, pagination, and sorting.
     
     Args:
         q: General search query
@@ -39,6 +40,8 @@ async def search_books(
         max_price: Maximum price filter
         limit: Number of results to return
         offset: Number of results to skip
+        order_by: Field to sort by
+        order_direction: Sort direction
         db: Database session
         
     Returns:
@@ -54,7 +57,9 @@ async def search_books(
             min_price=min_price,
             max_price=max_price,
             limit=limit,
-            offset=offset
+            offset=offset,
+            order_by=order_by,
+            order_direction=order_direction
         )
         return books
     except Exception as e:

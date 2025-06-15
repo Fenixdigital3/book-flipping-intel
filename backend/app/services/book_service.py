@@ -1,4 +1,3 @@
-
 """
 Book service for business logic operations.
 
@@ -6,7 +5,7 @@ This module handles book-related business operations and database queries.
 """
 
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_, func, desc, asc
 from typing import List, Optional
 from ..models.book import Book
 from ..models.price import Price
@@ -26,10 +25,12 @@ class BookService:
         min_price: Optional[float] = None,
         max_price: Optional[float] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
+        order_by: Optional[str] = None,
+        order_direction: str = "asc"
     ) -> List[BookResponse]:
         """
-        Search books with various filters.
+        Search books with various filters, pagination, and sorting.
         
         Args:
             db: Database session
@@ -41,6 +42,8 @@ class BookService:
             max_price: Maximum price filter
             limit: Number of results to return
             offset: Number of results to skip
+            order_by: Field to sort by
+            order_direction: Sort direction (asc/desc)
             
         Returns:
             List[BookResponse]: List of books matching criteria
@@ -79,17 +82,48 @@ class BookService:
             
             db_query = db_query.filter(Book.id.in_(price_subquery))
         
-        # Apply pagination and active filter
-        books = db_query.filter(Book.is_active == True)\
-                       .offset(offset)\
-                       .limit(limit)\
-                       .all()
+        # Apply active filter
+        db_query = db_query.filter(Book.is_active == True)
+        
+        # Apply sorting
+        if order_by:
+            order_func = desc if order_direction.lower() == "desc" else asc
+            
+            if order_by == "title":
+                db_query = db_query.order_by(order_func(Book.title))
+            elif order_by == "author":
+                db_query = db_query.order_by(order_func(Book.author))
+            elif order_by == "publication_year":
+                db_query = db_query.order_by(order_func(Book.publication_year))
+            elif order_by in ["lowest_price", "highest_price", "price_spread"]:
+                # For price-based sorting, we'll sort after fetching due to calculated fields
+                pass
+            else:
+                # Default to title if unknown sort field
+                db_query = db_query.order_by(order_func(Book.title))
+        else:
+            # Default sort by title
+            db_query = db_query.order_by(asc(Book.title))
+        
+        # Apply pagination
+        books = db_query.offset(offset).limit(limit).all()
         
         # Convert to response objects with price calculations
         result = []
         for book in books:
             book_response = BookService._book_to_response(book)
             result.append(book_response)
+        
+        # Handle price-based sorting after conversion
+        if order_by in ["lowest_price", "highest_price", "price_spread"]:
+            reverse_sort = order_direction.lower() == "desc"
+            
+            if order_by == "lowest_price":
+                result.sort(key=lambda x: x.lowest_price or float('inf'), reverse=reverse_sort)
+            elif order_by == "highest_price":
+                result.sort(key=lambda x: x.highest_price or 0, reverse=reverse_sort)
+            elif order_by == "price_spread":
+                result.sort(key=lambda x: x.price_spread or 0, reverse=reverse_sort)
         
         return result
     
