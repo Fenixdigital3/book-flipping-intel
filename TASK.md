@@ -3,7 +3,6 @@
 
 ## Active
 
-* [ ] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics.
 * [ ] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours.
 * [ ] Build initial REST API endpoints for:
   * [ ] Book list with filters
@@ -29,6 +28,7 @@
 
 ## Completed
 
+* [x] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics. _(Completed 2025-06-15)_
 * [x] Define and migrate PostgreSQL schema: books, retailers, prices, profitability. _(Completed 2025-06-15)_
 * [x] Initialize backend project with FastAPI and SQLModel. _(Completed 2025-06-15)_
 * [x] Initialize frontend project with React (Loveable.dev-compatible) and Tailwind CSS. _(Completed 2025-06-15)_
@@ -41,4 +41,3 @@
 * [ ] [Add scraper retry/timeout logging module]
 * [ ] [Evaluate need for rotating proxies on Amazon]
 * [ ] [Dynamic sitemap or robots.txt parser for future compliance]
-

@@ -1,59 +1,136 @@
-
 """
-Amazon US scraper for book data and prices.
+Amazon US scraper for book data and prices using Playwright.
 
 This module implements ethical web scraping for Amazon book listings.
 IMPORTANT: This is a placeholder implementation. Real scraping requires
 careful consideration of robots.txt, rate limiting, and legal compliance.
 """
 
-import aiohttp
 import asyncio
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
 import re
 import random
+from playwright.async_api import async_playwright, Playwright, Browser, Page
+
 
 class AmazonScraper:
     """
-    Amazon scraper for book data and pricing information.
-    
-    NOTE: This is a placeholder implementation for development.
+    Amazon scraper using Playwright for dynamic content and anti-bot tactics.
+
+    NOTE: This is a scaffold implementation for development.
     Production use requires:
     1. Compliance with Amazon's robots.txt and Terms of Service
     2. Proper rate limiting and request headers
     3. Legal review and potentially Amazon API access
-    4. Robust error handling and retry logic
+    4. Robust error handling, retry logic, and full parsing implementation
     """
-    
+
     def __init__(self):
         self.base_url = "https://www.amazon.com"
-        self.search_url = "https://www.amazon.com/s"
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        self.rate_limit = 1  # seconds between requests
-    
+
+    async def _init_browser(self, playwright: Playwright) -> Browser:
+        """Initialize a new browser instance with anti-bot measures."""
+        browser = await playwright.chromium.launch(
+            headless=True,  # Set to False for debugging
+            args=["--disable-blink-features=AutomationControlled"]
+        )
+        return browser
+
+    async def _create_page(self, browser: Browser) -> Page:
+        """Create a new page with a realistic user agent and viewport."""
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+        page = await browser.new_page(
+            user_agent=user_agent,
+            java_script_enabled=True,
+            viewport={'width': 1920, 'height': 1080}
+        )
+        # This script helps to hide the webdriver-controlled nature of the browser
+        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        return page
+
+    async def _navigate_with_retry(self, page: Page, url: str, retries: int = 3, delay: int = 5):
+        """Navigate to a URL with retries, checking for captchas."""
+        for i in range(retries):
+            try:
+                await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                
+                is_captcha = await page.query_selector("form[action='/errors/validateCaptcha']") is not None
+                if not is_captcha:
+                    return True  # Success
+                    
+                print(f"Captcha detected on attempt {i+1} for {url}. Retrying after delay...")
+                await asyncio.sleep(delay * (i + 1))
+            
+            except Exception as e:
+                print(f"Navigation error on attempt {i+1} for {url}: {e}")
+                if i == retries - 1:
+                    print("Max retries reached. Navigation failed.")
+                    raise
+                await asyncio.sleep(delay)
+        return False
+
     async def scrape_book(self, isbn: str) -> Optional[Dict[str, Any]]:
         """
-        Scrape book data by ISBN from Amazon.
+        Scrape book data by ISBN from Amazon using Playwright.
         
-        Args:
-            isbn: Book ISBN to search for
-            
-        Returns:
-            Dict: Book data including price and metadata
-            
         Note:
-            This is a placeholder that returns mock data.
-            Real implementation would parse Amazon HTML.
+            This is a scaffold that demonstrates Playwright usage but returns mock data.
+            The actual parsing logic needs to be implemented.
         """
-        # Simulate API delay
-        await asyncio.sleep(random.uniform(1, 3))
+        async with async_playwright() as p:
+            browser = await self._init_browser(p)
+            try:
+                page = await self._create_page(browser)
+                search_url = f"{self.base_url}/s?k={isbn}"
+                await self._navigate_with_retry(page, search_url)
+                
+                # TODO: Implement actual parsing of the page content
+                # content = await page.content()
+                # parsed_data = self._parse_book_page(content, isbn)
+
+            except Exception as e:
+                print(f"An error occurred while scraping ISBN {isbn}: {e}")
+            finally:
+                await browser.close()
         
-        # TODO: Replace with actual Amazon scraping
-        # For now, return mock data to demonstrate the structure
-        mock_data = {
+        return self._get_mock_book_data(isbn)
+
+    async def search_books(self, query: str, max_results: int = 20) -> List[Dict[str, Any]]:
+        """
+        Search for books on Amazon and return results using Playwright.
+        
+        Note:
+            This is a scaffold that demonstrates Playwright usage but returns mock data.
+            The actual parsing logic needs to be implemented.
+        """
+        async with async_playwright() as p:
+            browser = await self._init_browser(p)
+            try:
+                page = await self._create_page(browser)
+                search_url = f"{self.base_url}/s?k={query.replace(' ', '+')}"
+                await self._navigate_with_retry(page, search_url)
+
+                # TODO: Implement actual parsing of search results
+                # content = await page.content()
+                # return self._parse_search_results(content)[:max_results]
+
+            except Exception as e:
+                print(f"An error occurred while searching for '{query}': {e}")
+            finally:
+                await browser.close()
+        
+        results = []
+        for i in range(min(max_results, 10)):
+            isbn = f"978{random.randint(1000000000, 9999999999)}"
+            results.append(self._get_mock_book_data(isbn, f"{query} Related Book {i+1}"))
+        return results
+
+    def _get_mock_book_data(self, isbn: str, title_override: Optional[str] = None) -> Dict[str, Any]:
+        """Generates a mock book data dictionary."""
+        return {
             "isbn": isbn,
-            "title": f"Sample Book for ISBN {isbn}",
+            "title": title_override or f"Sample Book for ISBN {isbn}",
             "author": "Sample Author",
             "publisher": "Sample Publisher",
             "publication_year": 2023,
@@ -70,167 +147,15 @@ class AmazonScraper:
             "shipping_cost": random.choice([0.00, 3.99, 5.99]),
             "url": f"https://www.amazon.com/dp/example{isbn}"
         }
-        
-        return mock_data
-    
-    async def search_books(self, query: str, max_results: int = 20) -> List[Dict[str, Any]]:
-        """
-        Search for books on Amazon and return results.
-        
-        Args:
-            query: Search query
-            max_results: Maximum number of results to return
-            
-        Returns:
-            List[Dict]: List of book data from search results
-            
-        Note:
-            This is a placeholder that returns mock data.
-            Real implementation would parse Amazon search results.
-        """
-        # Simulate API delay
-        await asyncio.sleep(random.uniform(2, 4))
-        
-        # TODO: Replace with actual Amazon search scraping
-        # For now, return mock search results
-        results = []
-        for i in range(min(max_results, 10)):  # Limit mock results
-            isbn = f"978{random.randint(1000000000, 9999999999)}"
-            book_data = {
-                "isbn": isbn,
-                "title": f"{query} Related Book {i+1}",
-                "author": f"Author {i+1}",
-                "publisher": random.choice(["O'Reilly", "Manning", "Packt", "Apress"]),
-                "publication_year": random.randint(2018, 2024),
-                "category": "Technology",
-                "description": f"A book related to {query}. This is mock data for development.",
-                "image_url": f"https://via.placeholder.com/300x400?text=Book+{i+1}",
-                "pages": random.randint(200, 500),
-                "weight": f"{random.uniform(0.5, 2.0):.1f} lbs",
-                "dimensions": "8.5 x 5.5 x 1.0 inches",
-                "price": round(random.uniform(10.00, 50.00), 2),
-                "original_price": round(random.uniform(15.00, 60.00), 2),
-                "availability": random.choice(["in_stock", "limited"]),
-                "condition": "new",
-                "shipping_cost": random.choice([0.00, 3.99, 5.99]),
-                "url": f"https://www.amazon.com/dp/example{isbn}"
-            }
-            results.append(book_data)
-        
-        return results
-    
-    async def _make_request(self, url: str, params: Dict[str, str] = None) -> Optional[str]:
-        """
-        Make HTTP request to Amazon with proper headers and rate limiting.
-        
-        Args:
-            url: URL to request
-            params: Query parameters
-            
-        Returns:
-            str: HTML content or None if failed
-            
-        Note:
-            This method would handle actual HTTP requests in production.
-        """
-        headers = {
-            "User-Agent": self.user_agent,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
-            "Connection": "keep-alive",
-        }
-        
-        try:
-            # Rate limiting
-            await asyncio.sleep(self.rate_limit)
-            
-            # TODO: Implement actual HTTP request
-            # async with aiohttp.ClientSession() as session:
-            #     async with session.get(url, headers=headers, params=params) as response:
-            #         if response.status == 200:
-            #             return await response.text()
-            #         else:
-            #             print(f"Request failed with status {response.status}")
-            #             return None
-            
-            # For now, return None as this is a placeholder
-            return None
-            
-        except Exception as e:
-            print(f"Request error: {str(e)}")
-            return None
-    
-    def _parse_book_page(self, html: str) -> Optional[Dict[str, Any]]:
-        """
-        Parse Amazon book page HTML to extract book data.
-        
-        Args:
-            html: HTML content of book page
-            
-        Returns:
-            Dict: Parsed book data
-            
-        Note:
-            This method would implement actual HTML parsing in production.
-        """
+
+    def _parse_book_page(self, html: str, isbn: str) -> Optional[Dict[str, Any]]:
+        """Parse Amazon book page HTML to extract book data. (Placeholder)"""
         # TODO: Implement HTML parsing with BeautifulSoup
-        # soup = BeautifulSoup(html, 'html.parser')
-        # 
-        # # Extract title
-        # title_elem = soup.find('span', {'id': 'productTitle'})
-        # title = title_elem.text.strip() if title_elem else None
-        # 
-        # # Extract price
-        # price_elem = soup.find('span', class_='a-price-whole')
-        # price = float(price_elem.text.replace(',', '')) if price_elem else None
-        # 
-        # # Extract other fields...
-        # 
-        # return {
-        #     'title': title,
-        #     'price': price,
-        #     # ... other fields
-        # }
-        
-        # Placeholder return
         return None
     
     def _parse_search_results(self, html: str) -> List[Dict[str, Any]]:
-        """
-        Parse Amazon search results HTML to extract book listings.
-        
-        Args:
-            html: HTML content of search results page
-            
-        Returns:
-            List[Dict]: List of book data from search results
-            
-        Note:
-            This method would implement actual HTML parsing in production.
-        """
-        # TODO: Implement search results parsing
-        # soup = BeautifulSoup(html, 'html.parser')
-        # results = []
-        # 
-        # # Find all product containers
-        # products = soup.find_all('div', {'data-component-type': 's-search-result'})
-        # 
-        # for product in products:
-        #     # Extract product data
-        #     title_elem = product.find('h2', class_='a-size-mini')
-        #     price_elem = product.find('span', class_='a-price-whole')
-        #     
-        #     if title_elem and price_elem:
-        #         results.append({
-        #             'title': title_elem.text.strip(),
-        #             'price': float(price_elem.text.replace(',', '')),
-        #             # ... other fields
-        #         })
-        # 
-        # return results
-        
-        # Placeholder return
+        """Parse Amazon search results HTML to extract book listings. (Placeholder)"""
+        # TODO: Implement search results parsing with BeautifulSoup
         return []
 
 # Production scraping considerations:
