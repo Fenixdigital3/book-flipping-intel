@@ -3,7 +3,6 @@
 
 ## Active
 
-* [ ] Define and migrate PostgreSQL schema: books, retailers, prices, profitability.
 * [ ] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics.
 * [ ] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours.
 * [ ] Build initial REST API endpoints for:
@@ -30,6 +29,7 @@
 
 ## Completed
 
+* [x] Define and migrate PostgreSQL schema: books, retailers, prices, profitability. _(Completed 2025-06-15)_
 * [x] Initialize backend project with FastAPI and SQLModel. _(Completed 2025-06-15)_
 * [x] Initialize frontend project with React (Loveable.dev-compatible) and Tailwind CSS. _(Completed 2025-06-15)_
 * [x] Project planning finalized (`PLANNING.md`)
