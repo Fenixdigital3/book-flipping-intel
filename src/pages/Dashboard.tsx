@@ -12,6 +12,8 @@ import StatsCard from '@/components/StatsCard';
 import PaginationControls from '@/components/PaginationControls';
 import SortingControls from '@/components/SortingControls';
 import ExportButton from '@/components/ExportButton';
+import AuthModal from '@/components/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { apiService, PaginatedSearchParams } from '@/services/api';
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 import { 
@@ -21,16 +23,27 @@ import {
   BookOpen, 
   AlertCircle,
   RefreshCw,
-  Database
+  Database,
+  LogOut,
+  User
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [activeTab, setActiveTab] = useState('search');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [sortBy, setSortBy] = useState('title');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Redirect to auth modal if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setAuthModalOpen(true);
+    }
+  }, [authLoading, isAuthenticated]);
 
   // Calculate offset for API calls
   const offset = (currentPage - 1) * pageSize;
@@ -44,7 +57,7 @@ const Dashboard: React.FC = () => {
     order_direction: sortDirection,
   };
 
-  // Queries
+  // Queries - only run if authenticated
   const {
     data: books = [],
     isLoading: booksLoading,
@@ -53,7 +66,7 @@ const Dashboard: React.FC = () => {
   } = useQuery({
     queryKey: ['books', searchParams],
     queryFn: () => apiService.searchBooksWithPagination(searchParams),
-    enabled: Object.keys(searchFilters).length > 0
+    enabled: Object.keys(searchFilters).length > 0 && isAuthenticated
   });
 
   const {
@@ -63,8 +76,36 @@ const Dashboard: React.FC = () => {
   } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => apiService.getArbitrageOpportunities(5.0, 0.2),
-    refetchInterval: 5 * 60 * 1000 // Refresh every 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    enabled: isAuthenticated
   });
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth modal if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Please log in to continue</h1>
+            <Button onClick={() => setAuthModalOpen(true)}>Login / Register</Button>
+          </div>
+        </div>
+        <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      </>
+    );
+  }
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
@@ -133,18 +174,28 @@ const Dashboard: React.FC = () => {
                 Find profitable book resale opportunities across online stores
               </p>
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleTestScraper}>
-                <Database className="w-4 h-4 mr-2" />
-                Test Scraper
-              </Button>
-              <Button onClick={() => {
-                refetchBooks();
-                refetchOpportunities();
-              }}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Data
-              </Button>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span>{user?.email}</span>
+              </div>
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={handleTestScraper}>
+                  <Database className="w-4 h-4 mr-2" />
+                  Test Scraper
+                </Button>
+                <Button onClick={() => {
+                  refetchBooks();
+                  refetchOpportunities();
+                }}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh Data
+                </Button>
+                <Button variant="outline" onClick={logout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -346,6 +397,8 @@ const Dashboard: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 };

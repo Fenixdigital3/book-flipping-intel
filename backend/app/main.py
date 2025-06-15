@@ -12,7 +12,7 @@ import os
 from dotenv import load_dotenv
 import atexit
 
-from .routes import books, prices, scraper, price_history, alerts
+from .routes import books, prices, scraper, price_history, alerts, auth
 from .database import engine, Base
 from .scheduler import scheduler_service
 
@@ -51,6 +51,7 @@ async def shutdown_event():
 atexit.register(lambda: scheduler_service.stop())
 
 # Include route handlers
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(books.router, prefix="/api/books", tags=["books"])
 app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
 app.include_router(price_history.router, prefix="/api/prices", tags=["price-history"])

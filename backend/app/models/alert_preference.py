@@ -38,8 +38,8 @@ class AlertPreference(AlertPreferenceBase, table=True):
 
 
 class AlertPreferenceCreate(AlertPreferenceBase):
-    """Model for creating alert preferences."""
-    user_id: str
+    """Model for creating alert preferences - user_id will be set from JWT."""
+    pass
 
 
 class AlertPreferenceUpdate(SQLModel):

@@ -59,16 +59,31 @@ class ApiService {
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Get auth token from localStorage
+    const token = localStorage.getItem('auth_token');
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    };
+
+    // Add authorization header if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     try {
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
+        headers,
         ...options,
       });
 
       if (!response.ok) {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+          localStorage.removeItem('auth_token');
+          throw new Error('Authentication required. Please log in.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -167,9 +182,9 @@ class ApiService {
     return this.makeRequest<PriceStatistics>(endpoint);
   }
 
-  // Alert Preferences endpoints
-  async getAlertPreferences(userId: string): Promise<AlertPreference> {
-    return this.makeRequest<AlertPreference>(`/api/alerts/preferences/${userId}`);
+  // Alert Preferences endpoints - updated to not require user_id
+  async getAlertPreferences(): Promise<AlertPreference> {
+    return this.makeRequest<AlertPreference>('/api/alerts/preferences');
   }
 
   async createAlertPreferences(data: AlertPreferenceCreate): Promise<AlertPreference> {
@@ -179,15 +194,15 @@ class ApiService {
     });
   }
 
-  async updateAlertPreferences(userId: string, data: AlertPreferenceUpdate): Promise<AlertPreference> {
-    return this.makeRequest<AlertPreference>(`/api/alerts/preferences/${userId}`, {
+  async updateAlertPreferences(data: AlertPreferenceUpdate): Promise<AlertPreference> {
+    return this.makeRequest<AlertPreference>('/api/alerts/preferences', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteAlertPreferences(userId: string): Promise<{ message: string }> {
-    return this.makeRequest<{ message: string }>(`/api/alerts/preferences/${userId}`, {
+  async deleteAlertPreferences(): Promise<{ message: string }> {
+    return this.makeRequest<{ message: string }>('/api/alerts/preferences', {
       method: 'DELETE',
     });
   }

@@ -1,0 +1,85 @@
+
+import { LoginCredentials, RegisterCredentials, User, AuthToken } from '@/types/auth';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+class AuthService {
+  private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    const token = localStorage.getItem('auth_token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed for ${endpoint}:`, error);
+      throw error;
+    }
+  }
+
+  async login(credentials: LoginCredentials): Promise<{ token: string; user: User }> {
+    const authData = await this.makeRequest<AuthToken>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+
+    // Temporarily store token to get user data
+    const oldToken = localStorage.getItem('auth_token');
+    localStorage.setItem('auth_token', authData.access_token);
+
+    try {
+      const user = await this.getCurrentUser();
+      return {
+        token: authData.access_token,
+        user,
+      };
+    } catch (error) {
+      // Restore old token if user fetch fails
+      if (oldToken) {
+        localStorage.setItem('auth_token', oldToken);
+      } else {
+        localStorage.removeItem('auth_token');
+      }
+      throw error;
+    }
+  }
+
+  async register(credentials: RegisterCredentials): Promise<User> {
+    return this.makeRequest<User>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async getCurrentUser(): Promise<User> {
+    return this.makeRequest<User>('/api/auth/me');
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('auth_token');
+  }
+
+  removeToken(): void {
+    localStorage.removeItem('auth_token');
+  }
+}
+
+export const authService = new AuthService();

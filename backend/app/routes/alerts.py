@@ -15,20 +15,22 @@ from ..models.alert_preference import (
     AlertPreferenceUpdate, 
     AlertPreferenceResponse
 )
+from ..models.user import User
+from ..auth.dependencies import get_current_active_user
 
 router = APIRouter()
 
 
-@router.get("/preferences/{user_id}", response_model=AlertPreferenceResponse)
+@router.get("/preferences", response_model=AlertPreferenceResponse)
 async def get_alert_preferences(
-    user_id: str,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get alert preferences for a specific user.
+    Get alert preferences for the current user.
     
     Args:
-        user_id (str): User ID to get preferences for
+        current_user (User): Current authenticated user
         db (Session): Database session
         
     Returns:
@@ -38,7 +40,7 @@ async def get_alert_preferences(
         HTTPException: 404 if preferences not found
     """
     preferences = db.query(AlertPreference).filter(
-        AlertPreference.user_id == user_id
+        AlertPreference.user_id == current_user.id
     ).first()
     
     if not preferences:
@@ -53,13 +55,15 @@ async def get_alert_preferences(
 @router.post("/preferences", response_model=AlertPreferenceResponse)
 async def create_alert_preferences(
     preferences_data: AlertPreferenceCreate,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Create new alert preferences for a user.
+    Create new alert preferences for the current user.
     
     Args:
         preferences_data (AlertPreferenceCreate): Preference data to create
+        current_user (User): Current authenticated user
         db (Session): Database session
         
     Returns:
@@ -69,8 +73,11 @@ async def create_alert_preferences(
         HTTPException: 400 if preferences already exist for user
     """
     try:
-        # Create new preferences
-        preferences = AlertPreference(**preferences_data.dict())
+        # Create new preferences with current user's ID
+        preferences_dict = preferences_data.dict()
+        preferences_dict['user_id'] = current_user.id
+        
+        preferences = AlertPreference(**preferences_dict)
         db.add(preferences)
         db.commit()
         db.refresh(preferences)
@@ -90,18 +97,18 @@ async def create_alert_preferences(
         )
 
 
-@router.put("/preferences/{user_id}", response_model=AlertPreferenceResponse)
+@router.put("/preferences", response_model=AlertPreferenceResponse)
 async def update_alert_preferences(
-    user_id: str,
     preferences_update: AlertPreferenceUpdate,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Update existing alert preferences for a user.
+    Update existing alert preferences for the current user.
     
     Args:
-        user_id (str): User ID to update preferences for
         preferences_update (AlertPreferenceUpdate): Updated preference data
+        current_user (User): Current authenticated user
         db (Session): Database session
         
     Returns:
@@ -111,7 +118,7 @@ async def update_alert_preferences(
         HTTPException: 404 if preferences not found
     """
     preferences = db.query(AlertPreference).filter(
-        AlertPreference.user_id == user_id
+        AlertPreference.user_id == current_user.id
     ).first()
     
     if not preferences:
@@ -131,16 +138,16 @@ async def update_alert_preferences(
     return preferences
 
 
-@router.delete("/preferences/{user_id}")
+@router.delete("/preferences")
 async def delete_alert_preferences(
-    user_id: str,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Delete alert preferences for a user.
+    Delete alert preferences for the current user.
     
     Args:
-        user_id (str): User ID to delete preferences for
+        current_user (User): Current authenticated user
         db (Session): Database session
         
     Returns:
@@ -150,7 +157,7 @@ async def delete_alert_preferences(
         HTTPException: 404 if preferences not found
     """
     preferences = db.query(AlertPreference).filter(
-        AlertPreference.user_id == user_id
+        AlertPreference.user_id == current_user.id
     ).first()
     
     if not preferences:
