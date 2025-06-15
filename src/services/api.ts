@@ -1,7 +1,5 @@
 
-"""
-API service for making requests to the FastAPI backend.
-"""
+// API service for making requests to the FastAPI backend.
 
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 

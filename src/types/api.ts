@@ -1,7 +1,5 @@
 
-"""
-TypeScript interfaces for API responses.
-"""
+// TypeScript interfaces for API responses.
 
 export interface Book {
   id: number;
