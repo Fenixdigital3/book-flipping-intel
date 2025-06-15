@@ -1,6 +1,7 @@
 
 """Routes package initialization."""
 
-from . import books, prices, scraper
+from . import books, prices, scraper, price_history
 
-__all__ = ["books", "prices", "scraper"]
+__all__ = ["books", "prices", "scraper", "price_history"]
+

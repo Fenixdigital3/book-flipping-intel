@@ -1,9 +1,44 @@
-
 // API service for making requests to the FastAPI backend.
 
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+export interface PriceHistoryPoint {
+  retailer: string;
+  timestamp: string;
+  price: number;
+  original_price?: number;
+  availability?: string;
+  condition: string;
+}
+
+export interface PriceHistoryResponse {
+  book_id: number;
+  book_title: string;
+  book_isbn: string;
+  total_points: number;
+  date_range: {
+    start?: string;
+    end?: string;
+  };
+  history: PriceHistoryPoint[];
+}
+
+export interface PriceStatistics {
+  book_id: number;
+  statistics: {
+    period_days: number;
+    data_points: number;
+    average_price: number;
+    min_price: number;
+    max_price: number;
+    price_range: number;
+    volatility: number;
+    trend_slope: number;
+    trend_direction: 'increasing' | 'decreasing' | 'stable';
+  };
+}
 
 class ApiService {
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -63,6 +98,40 @@ class ApiService {
 
     const endpoint = `/api/prices/opportunities?${params.toString()}`;
     return this.makeRequest<ArbitrageOpportunity[]>(endpoint);
+  }
+
+  // New Price History endpoints
+  async getPriceHistory(
+    bookId: number,
+    options?: {
+      retailer?: string;
+      startDate?: string;
+      endDate?: string;
+      interval?: string;
+      limit?: number;
+    }
+  ): Promise<PriceHistoryResponse> {
+    const params = new URLSearchParams();
+    
+    if (options?.retailer) params.append('retailer', options.retailer);
+    if (options?.startDate) params.append('start_date', options.startDate);
+    if (options?.endDate) params.append('end_date', options.endDate);
+    if (options?.interval) params.append('interval', options.interval);
+    if (options?.limit) params.append('limit', options.limit.toString());
+
+    const endpoint = `/api/prices/history/${bookId}?${params.toString()}`;
+    return this.makeRequest<PriceHistoryResponse>(endpoint);
+  }
+
+  async getPriceStatistics(
+    bookId: number,
+    days: number = 30
+  ): Promise<PriceStatistics> {
+    const params = new URLSearchParams();
+    params.append('days', days.toString());
+
+    const endpoint = `/api/prices/statistics/${bookId}?${params.toString()}`;
+    return this.makeRequest<PriceStatistics>(endpoint);
   }
 
   // Scraper endpoints

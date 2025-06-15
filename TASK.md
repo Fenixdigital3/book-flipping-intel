@@ -1,11 +1,9 @@
 
+
 # TASK.md
 
 ## Active
 
-* [ ] Build initial REST API endpoints for:
-  * [ ] Book list with filters
-  * [ ] Book detail with historical price trend
 * [ ] Design and implement search interface in frontend:
   * [ ] Filter UI (profit margin, turnaround time)
   * [ ] Search bar (ISBN, keyword)
@@ -27,6 +25,9 @@
 
 ## Completed
 
+* [x] Build initial REST API endpoints for:
+  * [x] Book list with filters _(Completed 2025-06-15)_
+  * [x] Book detail with historical price trend _(Completed 2025-06-15)_
 * [x] Set up scheduler (APScheduler) to trigger Amazon scraper every 6 hours. _(Completed 2025-06-15)_
 * [x] Scaffold Amazon US scraper using Playwright with headless browser and anti-bot tactics. _(Completed 2025-06-15)_
 * [x] Define and migrate PostgreSQL schema: books, retailers, prices, profitability. _(Completed 2025-06-15)_
@@ -38,6 +39,9 @@
 
 ## Discovered During Work
 
+* [x] Added dedicated `/api/prices/history/{book_id}` endpoint for historical price trends _(Completed 2025-06-15)_
+* [x] Added `/api/prices/statistics/{book_id}` endpoint for price analytics and volatility _(Completed 2025-06-15)_
 * [ ] [Add scraper retry/timeout logging module]
 * [ ] [Evaluate need for rotating proxies on Amazon]
 * [ ] [Dynamic sitemap or robots.txt parser for future compliance]
+
