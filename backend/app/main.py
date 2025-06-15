@@ -5,10 +5,10 @@ FastAPI application for Book Arbitrage Intelligence Platform.
 This module initializes the FastAPI app and includes all route handlers.
 """
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import os
 from dotenv import load_dotenv
 import atexit
 
@@ -28,10 +28,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Configure CORS for production
+cors_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
+    "http://localhost:8080", 
+    "http://localhost:3000",
+    "https://*.lovable.app",
+    "https://*.railway.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:3000"],  # React dev server
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,7 +71,8 @@ async def root():
     return {
         "message": "Book Arbitrage Intelligence API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "environment": os.getenv("DEBUG", "false")
     }
 
 @app.get("/health")
@@ -76,3 +84,9 @@ async def health_check():
 async def get_scheduler_status():
     """Get scheduler status and job information."""
     return scheduler_service.get_status()
+
+# Railway health check endpoint
+@app.get("/healthz")
+async def railway_health_check():
+    """Railway health check endpoint."""
+    return {"status": "ok"}

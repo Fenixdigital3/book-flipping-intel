@@ -3,7 +3,10 @@
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
 import { AlertPreference, AlertPreferenceCreate, AlertPreferenceUpdate } from '@/types/alerts';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use Railway production URL or fallback to local development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+                     import.meta.env.VITE_API_BASE_URL || 
+                     'https://bookflip-backend.up.railway.app';
 
 export interface PriceHistoryPoint {
   retailer: string;
@@ -59,6 +62,8 @@ class ApiService {
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    console.log(`Making API request to: ${url}`);
+    
     // Get auth token from localStorage
     const token = localStorage.getItem('auth_token');
     
@@ -89,7 +94,9 @@ class ApiService {
           localStorage.removeItem('auth_token');
           throw new Error('Authentication required. Please log in.');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
