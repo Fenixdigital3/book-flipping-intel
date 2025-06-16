@@ -1,9 +1,19 @@
+"""
+BookFlipFinder FastAPI Backend - Contest Submission
+A complete book arbitrage API with CRUD operations, authentication,
+and in-memory storage.
+"""
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
+
+# ----------------------------
+# Pydantic Models
+# ----------------------------
 
 class BookBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=500)
@@ -40,10 +50,20 @@ class UserAuth(BaseModel):
     email: EmailStr
     password: str
 
+# ----------------------------
+# In‐Memory Storage
+# ----------------------------
+
 books_db: Dict[str, Dict[str, Any]] = {}
+
 users_db: Dict[str, Dict[str, str]] = {
+    # Pre‐populate demo account
     "demo@bookflipfinder.com": {"password": "demo123456"}
 }
+
+# ----------------------------
+# FastAPI App & Middleware
+# ----------------------------
 
 app = FastAPI(
     title="BookFlipFinder API",
@@ -53,11 +73,15 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Change to your frontend domain in prod if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ----------------------------
+# Utility Functions
+# ----------------------------
 
 def get_current_timestamp() -> datetime:
     return datetime.utcnow()
@@ -79,6 +103,10 @@ def create_book_record(book_data: BookCreate) -> Dict[str, Any]:
         "updated_at": timestamp
     }
 
+# ----------------------------
+# Authentication Endpoints
+# ----------------------------
+
 @app.post("/login")
 async def login(creds: UserAuth):
     user = users_db.get(creds.email)
@@ -93,9 +121,17 @@ async def register(creds: UserAuth):
     users_db[creds.email] = {"password": creds.password}
     return {"message": "Registration successful"}
 
+# ----------------------------
+# Health Check Endpoint
+# ----------------------------
+
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok", "service": "bookflipfinder-api"}
+
+# ----------------------------
+# Book CRUD Endpoints
+# ----------------------------
 
 @app.post("/books", response_model=BookResponse, status_code=201)
 async def create_book(book: BookCreate):
@@ -149,6 +185,10 @@ async def delete_book(book_id: str):
         raise HTTPException(status_code=404, detail="Book not found")
     deleted = books_db.pop(book_id)
     return {"message": f"Book '{deleted['title']}' deleted successfully"}
+
+# ----------------------------
+# API Info Endpoint
+# ----------------------------
 
 @app.get("/info")
 async def get_api_info():
