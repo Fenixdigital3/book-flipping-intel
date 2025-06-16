@@ -1,22 +1,16 @@
-# main.py
 
 """
 BookFlipFinder FastAPI Backend - Contest Submission
-A complete book arbitrage API with CRUD operations, authentication,
-and in-memory storage.
+A complete book arbitrage API with CRUD operations and in-memory storage.
 """
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
 
-# ----------------------------
 # Pydantic Models
-# ----------------------------
-
 class BookBase(BaseModel):
     """Base book model with common fields."""
     title: str = Field(..., min_length=1, max_length=500)
@@ -52,45 +46,17 @@ class BookResponse(BookBase):
     class Config:
         from_attributes = True
 
-class UserAuth(BaseModel):
-    """Model for login/register payload."""
-    email: EmailStr
-    password: str
-
-# ----------------------------
-# In‐Memory Storage
-# ----------------------------
-
+# In-memory storage
 books_db: Dict[str, Dict[str, Any]] = {}
 
-users_db: Dict[str, Dict[str, str]] = {
-    # Pre‐populate demo account
-    "demo@bookflipfinder.com": {"password": "demo123456"}
-}
-
-# ----------------------------
-# FastAPI App & Middleware
-# ----------------------------
-
+# FastAPI app
 app = FastAPI(
     title="BookFlipFinder API",
     description="Book arbitrage intelligence platform for contest submission",
     version="1.0.0"
 )
 
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # For production, restrict to your frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ----------------------------
-# Utility Functions
-# ----------------------------
-
+# Utility functions
 def get_current_timestamp() -> datetime:
     """Get current UTC timestamp."""
     return datetime.utcnow()
@@ -99,6 +65,7 @@ def create_book_record(book_data: BookCreate) -> Dict[str, Any]:
     """Create a new book record with metadata."""
     book_id = str(uuid.uuid4())
     timestamp = get_current_timestamp()
+    
     return {
         "id": book_id,
         "title": book_data.title,
@@ -113,112 +80,155 @@ def create_book_record(book_data: BookCreate) -> Dict[str, Any]:
         "updated_at": timestamp
     }
 
-# ----------------------------
-# Authentication Endpoints
-# ----------------------------
-
-@app.post("/login")
-async def login(creds: UserAuth):
-    """
-    Authenticate a user.
-    Raises 401 if credentials invalid.
-    """
-    user = users_db.get(creds.email)
-    if not user or user["password"] != creds.password:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"message": "Login successful", "token": "fake-jwt-token"}
-
-@app.post("/register")
-async def register(creds: UserAuth):
-    """
-    Register a new user.
-    Raises 400 if user already exists.
-    """
-    if creds.email in users_db:
-        raise HTTPException(status_code=400, detail="User already exists")
-    users_db[creds.email] = {"password": creds.password}
-    return {"message": "Registration successful"}
-
-# ----------------------------
-# Health Check Endpoint
-# ----------------------------
-
+# Health check endpoint
 @app.get("/healthz")
 async def health_check():
     """Railway health check endpoint."""
     return {"status": "ok", "service": "bookflipfinder-api"}
 
-# ----------------------------
-# Book CRUD Endpoints
-# ----------------------------
-
+# Book CRUD endpoints
 @app.post("/books", response_model=BookResponse, status_code=201)
 async def create_book(book: BookCreate):
-    """Create a new book record."""
-    # ISBN uniqueness check
-    for existing in books_db.values():
-        if existing["isbn"] == book.isbn:
-            raise HTTPException(status_code=400, detail=f"Book with ISBN {book.isbn} already exists")
-    record = create_book_record(book)
-    books_db[record["id"]] = record
-    return BookResponse(**record)
+    """
+    Create a new book record.
+    
+    Args:
+        book: Book data to create
+        
+    Returns:
+        BookResponse: Created book with metadata
+        
+    Raises:
+        HTTPException: 400 if ISBN already exists
+    """
+    # Check if ISBN already exists
+    for existing_book in books_db.values():
+        if existing_book["isbn"] == book.isbn:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Book with ISBN {book.isbn} already exists"
+            )
+    
+    book_record = create_book_record(book)
+    books_db[book_record["id"]] = book_record
+    
+    return BookResponse(**book_record)
 
 @app.get("/books", response_model=List[BookResponse])
 async def list_books(
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    category: Optional[str] = Query(None),
-    author: Optional[str] = Query(None)
+    limit: int = Query(10, ge=1, le=100, description="Number of books to return"),
+    offset: int = Query(0, ge=0, description="Number of books to skip"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    author: Optional[str] = Query(None, description="Filter by author")
 ):
-    """List books with optional filters and pagination."""
-    items = list(books_db.values())
+    """
+    List books with optional filtering and pagination.
+    
+    Args:
+        limit: Maximum number of books to return
+        offset: Number of books to skip
+        category: Optional category filter
+        author: Optional author filter
+        
+    Returns:
+        List[BookResponse]: List of books matching criteria
+    """
+    books_list = list(books_db.values())
+    
+    # Apply filters
     if category:
-        items = [b for b in items if b.get("category") == category]
+        books_list = [book for book in books_list if book.get("category") == category]
+    
     if author:
-        items = [b for b in items if b.get("author") == author]
-    paginated = items[offset : offset + limit]
-    return [BookResponse(**b) for b in paginated]
+        books_list = [book for book in books_list if book.get("author") == author]
+    
+    # Apply pagination
+    paginated_books = books_list[offset:offset + limit]
+    
+    return [BookResponse(**book) for book in paginated_books]
 
 @app.get("/books/{book_id}", response_model=BookResponse)
 async def get_book(book_id: str):
-    """Retrieve a book by its ID."""
+    """
+    Get a specific book by ID.
+    
+    Args:
+        book_id: Book ID to retrieve
+        
+    Returns:
+        BookResponse: Book details
+        
+    Raises:
+        HTTPException: 404 if book not found
+    """
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
+    
     return BookResponse(**books_db[book_id])
 
 @app.put("/books/{book_id}", response_model=BookResponse)
 async def update_book(book_id: str, book_update: BookUpdate):
-    """Update an existing book record."""
+    """
+    Update an existing book.
+    
+    Args:
+        book_id: Book ID to update
+        book_update: Updated book data
+        
+    Returns:
+        BookResponse: Updated book details
+        
+    Raises:
+        HTTPException: 404 if book not found, 400 if ISBN conflict
+    """
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
-    record = books_db[book_id].copy()
+    
+    book_record = books_db[book_id].copy()
+    
+    # Check for ISBN conflicts if updating ISBN
+    if book_update.isbn:
+        for existing_id, existing_book in books_db.items():
+            if existing_id != book_id and existing_book["isbn"] == book_update.isbn:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"ISBN {book_update.isbn} already exists"
+                )
+    
+    # Update fields
     update_data = book_update.dict(exclude_unset=True)
-    if "isbn" in update_data:
-        # ISBN conflict check
-        for eid, eb in books_db.items():
-            if eid != book_id and eb["isbn"] == update_data["isbn"]:
-                raise HTTPException(status_code=400, detail=f"ISBN {update_data['isbn']} already exists")
-    for k, v in update_data.items():
-        record[k] = v
-    record["updated_at"] = get_current_timestamp()
-    books_db[book_id] = record
-    return BookResponse(**record)
+    for field, value in update_data.items():
+        book_record[field] = value
+    
+    book_record["updated_at"] = get_current_timestamp()
+    books_db[book_id] = book_record
+    
+    return BookResponse(**book_record)
 
 @app.delete("/books/{book_id}")
 async def delete_book(book_id: str):
-    """Delete a book by its ID."""
+    """
+    Delete a book by ID.
+    
+    Args:
+        book_id: Book ID to delete
+        
+    Returns:
+        dict: Success message
+        
+    Raises:
+        HTTPException: 404 if book not found
+    """
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
-    deleted = books_db.pop(book_id)
-    return {"message": f"Book '{deleted['title']}' deleted successfully"}
+    
+    deleted_book = books_db.pop(book_id)
+    return {"message": f"Book '{deleted_book['title']}' deleted successfully"}
 
-# ----------------------------
-# API Info Endpoint
-# ----------------------------
-
+# Development info endpoint
 @app.get("/info")
 async def get_api_info():
-    """Get API metadata and statistics."""
+    """Get API information and statistics."""
     return {
         "name": "BookFlipFinder API",
         "version": "1.0.0",
@@ -226,9 +236,10 @@ async def get_api_info():
         "endpoints": {
             "health": "/healthz",
             "books": "/books",
-            "login": "/login",
-            "register": "/register",
-            "info": "/info"
+            "create_book": "POST /books",
+            "get_book": "GET /books/{id}",
+            "update_book": "PUT /books/{id}",
+            "delete_book": "DELETE /books/{id}"
         }
     }
 
