@@ -1,5 +1,3 @@
-# main.py
-
 """
 BookFlipFinder FastAPI Backend - Contest Submission
 A complete book arbitrage API with CRUD operations, authentication,
@@ -18,7 +16,6 @@ import uuid
 # ----------------------------
 
 class BookBase(BaseModel):
-    """Base book model with common fields."""
     title: str = Field(..., min_length=1, max_length=500)
     author: str = Field(..., min_length=1, max_length=300)
     isbn: str = Field(..., min_length=10, max_length=13)
@@ -29,11 +26,9 @@ class BookBase(BaseModel):
     price: float = Field(..., ge=0)
 
 class BookCreate(BookBase):
-    """Model for creating a new book."""
     pass
 
 class BookUpdate(BaseModel):
-    """Model for updating an existing book."""
     title: Optional[str] = Field(None, min_length=1, max_length=500)
     author: Optional[str] = Field(None, min_length=1, max_length=300)
     isbn: Optional[str] = Field(None, min_length=10, max_length=13)
@@ -44,7 +39,6 @@ class BookUpdate(BaseModel):
     price: Optional[float] = Field(None, ge=0)
 
 class BookResponse(BookBase):
-    """Model for book responses with additional metadata."""
     id: str
     created_at: datetime
     updated_at: datetime
@@ -53,7 +47,6 @@ class BookResponse(BookBase):
         from_attributes = True
 
 class UserAuth(BaseModel):
-    """Model for login/register payload."""
     email: EmailStr
     password: str
 
@@ -78,10 +71,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, restrict to your frontend URL
+    allow_origins=["*"],  # Change to your frontend domain in prod if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,11 +84,9 @@ app.add_middleware(
 # ----------------------------
 
 def get_current_timestamp() -> datetime:
-    """Get current UTC timestamp."""
     return datetime.utcnow()
 
 def create_book_record(book_data: BookCreate) -> Dict[str, Any]:
-    """Create a new book record with metadata."""
     book_id = str(uuid.uuid4())
     timestamp = get_current_timestamp()
     return {
@@ -119,10 +109,6 @@ def create_book_record(book_data: BookCreate) -> Dict[str, Any]:
 
 @app.post("/login")
 async def login(creds: UserAuth):
-    """
-    Authenticate a user.
-    Raises 401 if credentials invalid.
-    """
     user = users_db.get(creds.email)
     if not user or user["password"] != creds.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -130,10 +116,6 @@ async def login(creds: UserAuth):
 
 @app.post("/register")
 async def register(creds: UserAuth):
-    """
-    Register a new user.
-    Raises 400 if user already exists.
-    """
     if creds.email in users_db:
         raise HTTPException(status_code=400, detail="User already exists")
     users_db[creds.email] = {"password": creds.password}
@@ -145,7 +127,6 @@ async def register(creds: UserAuth):
 
 @app.get("/healthz")
 async def health_check():
-    """Railway health check endpoint."""
     return {"status": "ok", "service": "bookflipfinder-api"}
 
 # ----------------------------
@@ -154,8 +135,6 @@ async def health_check():
 
 @app.post("/books", response_model=BookResponse, status_code=201)
 async def create_book(book: BookCreate):
-    """Create a new book record."""
-    # ISBN uniqueness check
     for existing in books_db.values():
         if existing["isbn"] == book.isbn:
             raise HTTPException(status_code=400, detail=f"Book with ISBN {book.isbn} already exists")
@@ -170,7 +149,6 @@ async def list_books(
     category: Optional[str] = Query(None),
     author: Optional[str] = Query(None)
 ):
-    """List books with optional filters and pagination."""
     items = list(books_db.values())
     if category:
         items = [b for b in items if b.get("category") == category]
@@ -181,20 +159,17 @@ async def list_books(
 
 @app.get("/books/{book_id}", response_model=BookResponse)
 async def get_book(book_id: str):
-    """Retrieve a book by its ID."""
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
     return BookResponse(**books_db[book_id])
 
 @app.put("/books/{book_id}", response_model=BookResponse)
 async def update_book(book_id: str, book_update: BookUpdate):
-    """Update an existing book record."""
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
     record = books_db[book_id].copy()
     update_data = book_update.dict(exclude_unset=True)
     if "isbn" in update_data:
-        # ISBN conflict check
         for eid, eb in books_db.items():
             if eid != book_id and eb["isbn"] == update_data["isbn"]:
                 raise HTTPException(status_code=400, detail=f"ISBN {update_data['isbn']} already exists")
@@ -206,7 +181,6 @@ async def update_book(book_id: str, book_update: BookUpdate):
 
 @app.delete("/books/{book_id}")
 async def delete_book(book_id: str):
-    """Delete a book by its ID."""
     if book_id not in books_db:
         raise HTTPException(status_code=404, detail="Book not found")
     deleted = books_db.pop(book_id)
@@ -218,7 +192,6 @@ async def delete_book(book_id: str):
 
 @app.get("/info")
 async def get_api_info():
-    """Get API metadata and statistics."""
     return {
         "name": "BookFlipFinder API",
         "version": "1.0.0",
@@ -231,7 +204,3 @@ async def get_api_info():
             "info": "/info"
         }
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
