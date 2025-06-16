@@ -51,13 +51,13 @@ class UserAuth(BaseModel):
     password: str
 
 # ----------------------------
-# In‐Memory Storage
+# In-Memory Storage
 # ----------------------------
 
 books_db: Dict[str, Dict[str, Any]] = {}
 
 users_db: Dict[str, Dict[str, str]] = {
-    # Pre‐populate demo account
+    # Pre-populate demo account
     "demo@bookflipfinder.com": {"password": "demo123456"}
 }
 
