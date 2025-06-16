@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch
 from datetime import datetime
 
-from app.main import app, books_db
+from backend.app.main import app, books_db
 
 client = TestClient(app)
 
@@ -51,7 +51,7 @@ class TestHealthCheck:
     
     def test_health_check_simulated_failure(self):
         """Test simulated health check failure."""
-        with patch('app.main.app') as mock_app:
+        with patch('backend.app.main.app') as mock_app:
             mock_app.get.side_effect = Exception("Service unavailable")
             try:
                 response = client.get("/healthz")
@@ -267,6 +267,49 @@ class TestDeleteBook:
         # Second deletion
         response = client.delete(f"/books/{book_id}")
         assert response.status_code == 404
+
+# Authentication tests
+class TestAuthentication:
+    def test_login_success(self):
+        """Test successful login with demo account."""
+        login_data = {
+            "email": "demo@bookflipfinder.com",
+            "password": "demo123456"
+        }
+        response = client.post("/login", json=login_data)
+        assert response.status_code == 200
+        assert "message" in response.json()
+        assert "token" in response.json()
+    
+    def test_login_invalid_credentials(self):
+        """Test login with invalid credentials."""
+        login_data = {
+            "email": "wrong@email.com",
+            "password": "wrongpassword"
+        }
+        response = client.post("/login", json=login_data)
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid credentials"
+    
+    def test_register_success(self):
+        """Test successful user registration."""
+        register_data = {
+            "email": "newuser@test.com",
+            "password": "newpassword123"
+        }
+        response = client.post("/register", json=register_data)
+        assert response.status_code == 200
+        assert "message" in response.json()
+    
+    def test_register_existing_user(self):
+        """Test registration with existing email."""
+        register_data = {
+            "email": "demo@bookflipfinder.com",
+            "password": "somepassword"
+        }
+        response = client.post("/register", json=register_data)
+        assert response.status_code == 400
+        assert response.json()["detail"] == "User already exists"
 
 # API info tests
 class TestAPIInfo:

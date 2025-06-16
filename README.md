@@ -44,16 +44,12 @@
 
 3. **Install dependencies:**
    ```bash
-   pip install fastapi uvicorn pytest
+   pip install -r requirements.txt
    ```
 
 4. **Run the application:**
    ```bash
-   python -m app.main
-   ```
-   OR
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
 5. **Access the API:**
@@ -68,36 +64,34 @@
 ### Prerequisites
 Ensure pytest is installed:
 ```bash
-pip install pytest
+pip install -r requirements.txt
 ```
 
 ### Run All Tests
 ```bash
-# From the backend directory
-pytest
-
-# With verbose output
-pytest -v
+# From the root directory
+pytest backend/tests/ -v
 
 # With coverage (if pytest-cov is installed)
-pytest --cov=app
+pytest backend/tests/ --cov=backend.app
 ```
 
 ### Run Specific Test Categories
 ```bash
 # Run only health check tests
-pytest tests/test_main.py::TestHealthCheck -v
+pytest backend/tests/test_main.py::TestHealthCheck -v
 
 # Run only book creation tests
-pytest tests/test_main.py::TestCreateBook -v
+pytest backend/tests/test_main.py::TestCreateBook -v
 
 # Run only CRUD tests
-pytest tests/test_main.py::TestCreateBook tests/test_main.py::TestListBooks tests/test_main.py::TestGetBook tests/test_main.py::TestUpdateBook tests/test_main.py::TestDeleteBook -v
+pytest backend/tests/test_main.py::TestCreateBook backend/tests/test_main.py::TestListBooks backend/tests/test_main.py::TestGetBook backend/tests/test_main.py::TestUpdateBook backend/tests/test_main.py::TestDeleteBook -v
 ```
 
 ### Test Coverage
 The test suite includes:
 - ✅ **Health Check Tests**: Success and failure scenarios
+- ✅ **Authentication Tests**: Login, register, invalid credentials
 - ✅ **Book Creation Tests**: Success, duplicate ISBN, invalid data
 - ✅ **Book Listing Tests**: Empty database, pagination, filtering
 - ✅ **Book Retrieval Tests**: Success, not found, edge cases
@@ -120,6 +114,28 @@ curl -X GET "https://bookflip-backend-production.up.railway.app/healthz"
   "status": "ok",
   "service": "bookflipfinder-api"
 }
+```
+
+### Authentication
+
+#### Register a New User
+```bash
+curl -X POST "https://bookflip-backend-production.up.railway.app/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123"
+  }'
+```
+
+#### Login
+```bash
+curl -X POST "https://bookflip-backend-production.up.railway.app/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "demo@bookflipfinder.com",
+    "password": "demo123456"
+  }'
 ```
 
 ### Create a Book
@@ -186,6 +202,8 @@ curl -X GET "https://bookflip-backend-production.up.railway.app/info"
 |--------|----------|-------------|
 | GET | `/healthz` | Health check endpoint |
 | GET | `/info` | API information and statistics |
+| POST | `/register` | Register a new user |
+| POST | `/login` | Login user |
 | POST | `/books` | Create a new book |
 | GET | `/books` | List books with optional filtering |
 | GET | `/books/{book_id}` | Get a specific book |
@@ -213,6 +231,14 @@ curl -X GET "https://bookflip-backend-production.up.railway.app/info"
 }
 ```
 
+### User Authentication Model
+```json
+{
+  "email": "string (valid email)",
+  "password": "string"
+}
+```
+
 ---
 
 ## 🔧 Configuration
@@ -232,26 +258,33 @@ No environment variables are required for basic operation. The application uses 
 
 This backend is deployed on [Railway](https://railway.app/).
 
+**Start Command for Railway:**
+```
+uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+```
+
 **Deployment Process:**
 1. Connect your GitHub repository to Railway
 2. Railway automatically detects the Python application
-3. Railway builds and deploys the application
-4. The application is available at the provided Railway URL
+3. Set the start command to: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+4. Railway builds and deploys the application
+5. The application is available at the provided Railway URL
 
 **Redeployment:**
-To redeploy, push changes to the connected branch (e.g., `main`) and Railway will automatically rebuild and redeploy your backend.
+This backend is deployed on [Railway](https://railway.app/). To redeploy, push changes to the connected branch (e.g., `main`) and Railway will automatically rebuild and redeploy your backend.
 
 **Railway Configuration:**
-- **Build Command:** `pip install -r requirements.txt` (if requirements.txt exists)
-- **Start Command:** `python -m app.main` or `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
 - **Port:** Railway automatically assigns a port via the `$PORT` environment variable
 
 ### Manual Deployment Steps
 1. Ensure your code is in a Git repository
 2. Create a Railway account at https://railway.app
 3. Create a new project and connect your repository
-4. Railway will automatically detect and deploy your FastAPI application
-5. Access your deployed API at the provided Railway URL
+4. Set the start command to: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+5. Railway will automatically detect and deploy your FastAPI application
+6. Access your deployed API at the provided Railway URL
 
 ---
 
@@ -260,16 +293,19 @@ To redeploy, push changes to the connected branch (e.g., `main`) and Railway wil
 ### Project Structure
 ```
 backend/
+├── __init__.py              # Python package initialization
 ├── app/
-│   └── main.py          # FastAPI application
+│   ├── __init__.py         # App package initialization
+│   └── main.py             # FastAPI application
 ├── tests/
-│   └── test_main.py     # Comprehensive test suite
-└── README.md            # This file
+│   └── test_main.py        # Comprehensive test suite
+├── requirements.txt        # Python dependencies
+└── Procfile               # Railway deployment config
 ```
 
 ### Adding New Features
-1. Implement new endpoints in `app/main.py`
-2. Add corresponding tests in `tests/test_main.py`
+1. Implement new endpoints in `backend/app/main.py`
+2. Add corresponding tests in `backend/tests/test_main.py`
 3. Update this README with new API documentation
 4. Test locally before deploying
 
@@ -285,8 +321,9 @@ backend/
 ## 📋 Contest Submission Checklist
 
 - ✅ **FastAPI Backend**: Complete with Book CRUD operations
-- ✅ **All Endpoints Working**: Create, Read, Update, Delete books
-- ✅ **Comprehensive Tests**: Success, failure, and edge cases covered
+- ✅ **Python Package Structure**: Proper `__init__.py` files in `backend/` and `backend/app/`
+- ✅ **All Endpoints Working**: Create, Read, Update, Delete books + Authentication
+- ✅ **Comprehensive Tests**: Success, failure, and edge cases covered for all endpoints
 - ✅ **Health Check**: `/healthz` endpoint implemented and tested
 - ✅ **Live Deployment**: Backend deployed and accessible on Railway
 - ✅ **Complete Documentation**: Setup, usage, testing, and deployment instructions
@@ -294,6 +331,7 @@ backend/
 - ✅ **In-Memory Storage**: No external database dependencies
 - ✅ **Input Validation**: Pydantic models with proper validation
 - ✅ **Error Handling**: Appropriate HTTP status codes and error messages
+- ✅ **CORS Support**: Cross-origin requests enabled for frontend integration
 
 ---
 
