@@ -17,3 +17,4 @@
   "onFailure": {
     "retries": 10
   }
+}
