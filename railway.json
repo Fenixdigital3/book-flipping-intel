@@ -1,11 +1,11 @@
 {
   "build": {
-    "builder": "docker-compose",
-    "composeFilePaths": ["backend/docker-compose.yml"],
-    "services": ["api"]
+    "builder": "dockerfile",
+    "dockerfilePath": "backend/Dockerfile",
+    "context": "backend"
   },
   "variables": [
-    { "key": "DATABASE_URL",  "value": "" },
+    { "key": "DATABASE_URL", "value": "" },
     { "key": "JWT_SECRET_KEY", "value": "" }
   ],
   "healthCheck": {
