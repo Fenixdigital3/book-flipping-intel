@@ -1,0 +1,29 @@
+
+{
+  "build": {
+    "builder": "dockerfile",
+    "buildCommand": "pip install -r requirements.txt"
+  },
+  "start": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+  },
+  "variables": [
+    {
+      "key": "DATABASE_URL",
+      "value": ""
+    },
+    {
+      "key": "JWT_SECRET_KEY",
+      "value": ""
+    }
+  ],
+  "healthCheck": {
+    "path": "/healthz",
+    "interval": 30,
+    "timeout": 5,
+    "successCodes": [200]
+  },
+  "onFailure": {
+    "retries": 10
+  }
+}
