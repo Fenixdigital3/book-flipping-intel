@@ -1,14 +1,12 @@
-
 """
 Alert Preference SQLModel for user notification settings.
 """
 
-from sqlalchemy import Column, ARRAY, String, text
+from sqlalchemy import Column, ARRAY, String
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 from typing import List, Optional
 from decimal import Decimal
-
 
 class AlertPreferenceBase(SQLModel):
     """Base alert preference model with shared fields."""
@@ -26,21 +24,19 @@ class AlertPreferenceBase(SQLModel):
     )
     is_active: bool = Field(default=True, description="Whether alerts are enabled")
 
-
 class AlertPreference(AlertPreferenceBase, table=True):
     """Alert preference database model."""
     __tablename__ = "alert_preferences"
+    __table_args__ = {'extend_existing': True}
     
     id: Optional[str] = Field(default=None, primary_key=True)
     user_id: str = Field(description="User ID from auth system")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-
 class AlertPreferenceCreate(AlertPreferenceBase):
     """Model for creating alert preferences - user_id will be set from JWT."""
     pass
-
 
 class AlertPreferenceUpdate(SQLModel):
     """Model for updating alert preferences."""
@@ -49,7 +45,6 @@ class AlertPreferenceUpdate(SQLModel):
     include_retailers: Optional[List[str]] = None
     alert_frequency: Optional[str] = None
     is_active: Optional[bool] = None
-
 
 class AlertPreferenceResponse(AlertPreferenceBase):
     """Response model for alert preferences."""
