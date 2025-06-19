@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/select';
 import { AlertPreference, AlertPreferenceCreate, AlertPreferenceUpdate } from '@/types/alerts';
 import { apiService } from '@/services/api';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, AlertCircle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface AlertSettingsModalProps {
   isOpen: boolean;
@@ -77,8 +78,8 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
     },
   });
 
-  // Fetch existing preferences - fixed to not pass userId
-  const { data: preferences, isLoading } = useQuery({
+  // Fetch existing preferences
+  const { data: preferences, isLoading, error } = useQuery({
     queryKey: ['alertPreferences'],
     queryFn: () => apiService.getAlertPreferences(),
     enabled: isOpen,
@@ -90,22 +91,64 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
     mutationFn: (data: AlertPreferenceCreate) => apiService.createAlertPreferences(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alertPreferences'] });
+      toast({
+        title: "Alert Settings Created",
+        description: "Your alert preferences have been saved successfully.",
+      });
       onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Create Settings",
+        description: error.message || "Could not save alert preferences.",
+        variant: "destructive",
+      });
     },
   });
 
-  // Update preferences mutation - fixed to not pass userId
+  // Update preferences mutation
   const updateMutation = useMutation({
     mutationFn: (data: AlertPreferenceUpdate) => apiService.updateAlertPreferences(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alertPreferences'] });
+      toast({
+        title: "Alert Settings Updated",
+        description: "Your alert preferences have been updated successfully.",
+      });
       onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Update Settings",
+        description: error.message || "Could not update alert preferences.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete preferences mutation
+  const deleteMutation = useMutation({
+    mutationFn: () => apiService.deleteAlertPreferences(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alertPreferences'] });
+      toast({
+        title: "Alert Settings Deleted",
+        description: "Your alert preferences have been deleted.",
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Delete Settings",
+        description: error.message || "Could not delete alert preferences.",
+        variant: "destructive",
+      });
     },
   });
 
   // Check if this is a new preference (404 error means no preferences exist)
   useEffect(() => {
-    if (!isLoading && !preferences) {
+    if (error && error.message.includes('404')) {
       setIsNewPreference(true);
     } else if (preferences) {
       setIsNewPreference(false);
@@ -118,7 +161,7 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
         is_active: preferences.is_active,
       });
     }
-  }, [preferences, isLoading, form]);
+  }, [preferences, error, form]);
 
   const onSubmit = (data: FormData) => {
     if (isNewPreference) {
@@ -140,9 +183,15 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
     }
   };
 
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete your alert settings? This action cannot be undone.')) {
+      deleteMutation.mutate();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Bell className="w-5 h-5" />
@@ -150,135 +199,164 @@ const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Alert Active Toggle */}
-            <FormField
-              control={form.control}
-              name="is_active"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between">
-                  <FormLabel>Enable Alerts</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {/* Profit Margin Threshold */}
-            <FormField
-              control={form.control}
-              name="profit_margin_threshold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum Profit Margin (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Minimum Stock */}
-            <FormField
-              control={form.control}
-              name="min_stock"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum Stock Required</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Alert Frequency */}
-            <FormField
-              control={form.control}
-              name="alert_frequency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Alert Frequency</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-orange"></div>
+            <span className="ml-2 text-white/80">Loading settings...</span>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Alert Active Toggle */}
+              <FormField
+                control={form.control}
+                name="is_active"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel className="text-white">Enable Alerts</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {FREQUENCY_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
+                  </FormItem>
+                )}
+              />
+
+              {/* Profit Margin Threshold */}
+              <FormField
+                control={form.control}
+                name="profit_margin_threshold"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Minimum Profit Margin (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        className="bg-glass-purple/20 border-neon-orange/30 text-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Minimum Stock */}
+              <FormField
+                control={form.control}
+                name="min_stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Minimum Stock Required</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        className="bg-glass-purple/20 border-neon-orange/30 text-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Alert Frequency */}
+              <FormField
+                control={form.control}
+                name="alert_frequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Alert Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-glass-purple/20 border-neon-orange/30 text-white">
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Include Retailers */}
+              <FormField
+                control={form.control}
+                name="include_retailers"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="text-white">Include Retailers</FormLabel>
+                    <div className="space-y-3">
+                      {AVAILABLE_RETAILERS.map((retailer) => (
+                        <div key={retailer} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={retailer}
+                            checked={form.watch('include_retailers').includes(retailer)}
+                            onCheckedChange={(checked) => 
+                              handleRetailerChange(retailer, checked as boolean)
+                            }
+                          />
+                          <label htmlFor={retailer} className="text-sm font-medium text-white">
+                            {retailer}
+                          </label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Include Retailers */}
-            <FormField
-              control={form.control}
-              name="include_retailers"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Include Retailers</FormLabel>
-                  <div className="space-y-3">
-                    {AVAILABLE_RETAILERS.map((retailer) => (
-                      <div key={retailer} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={retailer}
-                          checked={form.watch('include_retailers').includes(retailer)}
-                          onCheckedChange={(checked) => 
-                            handleRetailerChange(retailer, checked as boolean)
-                          }
-                        />
-                        <label htmlFor={retailer} className="text-sm font-medium">
-                          {retailer}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {isNewPreference ? 'Create' : 'Update'} Settings
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* Action Buttons */}
+              <div className="flex justify-between pt-4">
+                <div>
+                  {!isNewPreference && (
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      onClick={handleDelete}
+                      disabled={deleteMutation.isPending}
+                    >
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete Settings'}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    className="bg-neon-orange hover:bg-neon-orange/80"
+                  >
+                    {createMutation.isPending || updateMutation.isPending
+                      ? 'Saving...'
+                      : isNewPreference 
+                        ? 'Create Settings' 
+                        : 'Update Settings'
+                    }
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

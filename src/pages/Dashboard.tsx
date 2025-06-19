@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import PaginationControls from '@/components/PaginationControls';
 import SortingControls from '@/components/SortingControls';
 import ExportButton from '@/components/ExportButton';
 import AuthModal from '@/components/AuthModal';
+import AlertSettingsModal from '@/components/AlertSettingsModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiService, PaginatedSearchParams } from '@/services/api';
 import { Book, ArbitrageOpportunity, SearchFilters } from '@/types/api';
@@ -25,12 +25,15 @@ import {
   RefreshCw,
   Database,
   LogOut,
-  User
+  User,
+  Bell,
+  Settings
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [alertSettingsOpen, setAlertSettingsOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [activeTab, setActiveTab] = useState('search');
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,6 +81,14 @@ const Dashboard: React.FC = () => {
     queryFn: () => apiService.getArbitrageOpportunities(5.0, 0.2),
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     enabled: isAuthenticated
+  });
+
+  // Query for alert preferences to show indicator
+  const { data: alertPreferences } = useQuery({
+    queryKey: ['alertPreferences'],
+    queryFn: () => apiService.getAlertPreferences(),
+    enabled: isAuthenticated,
+    retry: false,
   });
 
   // Show loading while checking authentication
@@ -183,6 +194,17 @@ const Dashboard: React.FC = () => {
                 <span className="font-body">{user?.email}</span>
               </div>
               <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setAlertSettingsOpen(true)}
+                  className="relative"
+                >
+                  <Bell className="w-4 h-4 mr-2 text-neon-lime" />
+                  Alert Settings
+                  {alertPreferences?.is_active && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-neon-lime rounded-full animate-pulse" />
+                  )}
+                </Button>
                 <Button variant="outline" onClick={handleTestScraper}>
                   <Database className="w-4 h-4 mr-2 text-neon-orange" />
                   Test Scraper
@@ -226,11 +248,11 @@ const Dashboard: React.FC = () => {
               className="border-l-4 border-l-neon-orange"
             />
             <StatsCard
-              title="High Value"
-              value={highProfitOpportunities}
-              subtitle="$10+ profit deals"
-              icon={AlertCircle}
-              className="border-l-4 border-l-glass-purple"
+              title="Alert Status"
+              value={alertPreferences?.is_active ? "Active" : "Inactive"}
+              subtitle={alertPreferences ? `${alertPreferences.alert_frequency} alerts` : "Not configured"}
+              icon={Bell}
+              className={`border-l-4 ${alertPreferences?.is_active ? 'border-l-neon-lime' : 'border-l-glass-purple'}`}
             />
           </div>
         </div>
@@ -402,6 +424,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <AlertSettingsModal 
+        isOpen={alertSettingsOpen} 
+        onClose={() => setAlertSettingsOpen(false)}
+        userId={user?.id || ''}
+      />
     </div>
   );
 };
